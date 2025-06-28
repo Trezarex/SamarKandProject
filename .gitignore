@@ -1,0 +1,51 @@
+# Python bytecode
+__pycache__/
+*.py[cod]
+*.so
+
+# Virtual environment
+venv/
+env/
+ENV/
+.venv/
+
+# Environment variables
+.env
+.env.*
+
+# Flask session files (if any)
+instance/
+*.sqlite3
+
+# Log files
+*.log
+*.csv
+*.out
+*.pid
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# PyInstaller
+*.spec
+dist/
+build/
+
+# IDE files
+.vscode/
+.idea/
+
+# Test artifacts
+coverage/
+htmlcov/
+.tox/
+.pytest_cache/
+
+# Temporary files
+*.bak
+*.swp
+*.tmp
+
+# Jupyter notebooks checkpoints
+.ipynb_checkpoints/

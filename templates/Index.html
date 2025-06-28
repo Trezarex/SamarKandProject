@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Samarkand Data Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</head>
+
+
+<body>
+  <!-- Navigation Sidebar -->
+  <div class="nav-sidebar">
+    <div class="nav-header">
+      <h2>Samarkand Dashboard</h2>
+    </div>
+    
+    <div class="nav-menu">
+      <button class="nav-item active" onclick="showSection('homepage')">
+        🏠 Homepage
+      </button>
+      <button class="nav-item" onclick="showSection('dashboard')">
+        📊 Dashboard
+      </button>
+      <button class="nav-item" onclick="showSection('reports')">
+        📈 Reports
+      </button>
+      <button class="nav-item" onclick="showSection('chat-bot')">
+        🔮 Chat Bot
+      </button>
+      <button class="nav-item" onclick="showSection('settings')">
+        ⚙️ Settings
+      </button>
+      <button class="nav-item" onclick="showSection('account')">
+        👤 User Account
+      </button>
+    </div>
+    
+    <div class="nav-footer">
+      <button class="logout-btn" onclick="logout()">
+        🚪 Logout
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Content Area -->
+  <div class="main-content">
+    
+    <!-- Homepage section starts from here -->
+    <div id="homepage" class="content-section active">
+      <div class="homepage">
+        <div class="hero-section">
+          <h1>Welcome to Samarkand Data Analytics</h1>
+          <p>Discover powerful insights from comprehensive data analysis of hospitals, preschools, and educational institutions across the Samarkand region. Our advanced analytics platform provides real-time visualization and predictive modeling to support data-driven decision making.</p>
+        </div>
+        
+        <div class="features-grid">
+          <div class="feature-card">
+            <h3>📊 Interactive Dashboards</h3>
+            <p>Explore dynamic visualizations with real-time filtering and customizable chart types. Get instant insights from your data with our intuitive dashboard interface.</p>
+          </div>
+          <div class="feature-card">
+            <h3>🔮 Predictive Insights</h3>
+            <p>Forecast future trends and make informed decisions with our predictive modeling capabilities powered by artificial intelligence.</p>
+          </div>
+          <div class="feature-card">
+            <h3>📋 Comprehensive Reports</h3>
+            <p>Generate detailed reports with customizable metrics and export capabilities for presentations and further analysis.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dashboard section starts from here -->
+    <div id="dashboard" class="content-section">
+      <div class="dashboard-container">
+        <!-- Dashboard Header with Filters -->
+        <div class="dashboard-header">
+          <h1 class="dashboard-title">Data Analytics Dashboard</h1>
+          
+          <!-- All the dataset Selection -->
+          <div class="dataset-tabs">
+            <button id="btn-hospitals" onclick="loadData('hospitals')">🏥 Hospitals</button>
+            <button id="btn-preschools" onclick="loadData('preschools')">🏫 Preschools</button>
+            <button id="btn-students" onclick="loadData('students')">👨‍🎓 Students</button>
+          </div>
+
+          <!-- Filters Row -->
+          <div class="filters-container">
+            <div class="filter-group">
+              <label for="regionFilter">Region:</label>
+              <select id="regionFilter" onchange="applyFilters()">
+                <option value="">All Regions</option>
+              </select>
+            </div>
+
+            <div class="filter-group">
+              <label for="districtFilter">District:</label>
+              <select id="districtFilter" onchange="applyFilters()">
+                <option value="">All Districts</option>
+              </select>
+            </div>
+
+            <div class="filter-group">
+              <label for="metricSelector">Metric:</label>
+              <select id="metricSelector" onchange="renderChart(currentChartType)">
+                <option value="">Select Metric</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Chart Controls -->
+          <div class="chart-controls">
+            <button onclick="renderChart('bar')">📊 Bar Chart</button>
+            <button onclick="renderChart('line')">📈 Line Chart</button>
+            <button onclick="renderChart('pie')">🥧 Pie Chart</button>
+            <button class="download-btn" onclick="downloadChart()">💾 Download Chart</button>
+            <button class="download-btn" onclick="downloadCSV()">📄 Download CSV</button>
+          </div>
+        </div>
+
+        <!-- Dashboard Content -->
+        <div class="dashboard-content">
+          <div class="chart-container">
+            <canvas id="myChart"></canvas>
+            <div id="noDataMessage" class="no-data-message" style="display: none;">
+              📊 Select a dataset and metric to view the chart
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reports section starts from here -->
+    <div id="reports" class="content-section">
+      <div class="page-content">
+        <h1>Reports</h1>
+        <p>Generate comprehensive reports and analytics summaries for your data. This section will contain detailed reporting tools and export capabilities.</p>
+        <div class="placeholder-content">
+          <h3>📋 Reports Module</h3>
+          <p>Advanced reporting features coming soon. You'll be able to create custom reports, schedule automated reports, and export data in various formats.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Predictions section starts from here -->
+    <div id="chat-bot" class="content-section">
+      <div class="page-content">
+        <h1>Chat Bot</h1>
+        <p>Talk to our agent</p>
+        <div class="chatbot-container">
+          <div id="chat-messages" class="chat-messages"></div>
+          <form id="chat-form" class="chat-form" onsubmit="return sendMessage(event)">
+            <input type="text" id="chat-input" placeholder="Type your message..." autocomplete="off" required />
+            <button type="submit">Send</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings section starts from here -->
+    <div id="settings" class="content-section">
+      <div class="page-content">
+        <h1>Settings</h1>
+        <p>Configure your dashboard preferences, data sources, and system settings to customize your analytics experience.</p>
+        <div class="placeholder-content">
+          <h3>⚙️ System Configuration</h3>
+          <p>Manage your data connections, visualization preferences, user permissions, and notification settings from this centralized control panel.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- User Account section starts from here -->
+    <div id="account" class="content-section">
+      <div class="page-content">
+        <h1>User Account</h1>
+        <p>Manage your profile information, security settings, and account preferences.</p>
+        <div class="placeholder-content">
+          <h3>👤 Profile Management</h3>
+          <p>Update your personal information, change password, manage API keys, and configure your account security settings.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  
+</body>
+
+</html>
