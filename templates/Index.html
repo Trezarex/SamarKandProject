@@ -16,7 +16,7 @@
     <div class="nav-header">
       <h2>Samarkand Dashboard</h2>
     </div>
-    
+
     <div class="nav-menu">
       <button class="nav-item active" onclick="showSection('homepage')">
         🏠 Homepage
@@ -37,7 +37,7 @@
         👤 User Account
       </button>
     </div>
-    
+
     <div class="nav-footer">
       <button class="logout-btn" onclick="logout()">
         🚪 Logout
@@ -47,27 +47,32 @@
 
   <!-- Main Content Area -->
   <div class="main-content">
-    
+
     <!-- Homepage section starts from here -->
     <div id="homepage" class="content-section active">
       <div class="homepage">
         <div class="hero-section">
           <h1>Welcome to Samarkand Data Analytics</h1>
-          <p>Discover powerful insights from comprehensive data analysis of hospitals, preschools, and educational institutions across the Samarkand region. Our advanced analytics platform provides real-time visualization and predictive modeling to support data-driven decision making.</p>
+          <p>Discover powerful insights from comprehensive data analysis of hospitals, preschools, and educational
+            institutions across the Samarkand region. Our advanced analytics platform provides real-time visualization
+            and predictive modeling to support data-driven decision making.</p>
         </div>
-        
+
         <div class="features-grid">
           <div class="feature-card">
             <h3>📊 Interactive Dashboards</h3>
-            <p>Explore dynamic visualizations with real-time filtering and customizable chart types. Get instant insights from your data with our intuitive dashboard interface.</p>
+            <p>Explore dynamic visualizations with real-time filtering and customizable chart types. Get instant
+              insights from your data with our intuitive dashboard interface.</p>
           </div>
           <div class="feature-card">
             <h3>🔮 Predictive Insights</h3>
-            <p>Forecast future trends and make informed decisions with our predictive modeling capabilities powered by artificial intelligence.</p>
+            <p>Forecast future trends and make informed decisions with our predictive modeling capabilities powered by
+              artificial intelligence.</p>
           </div>
           <div class="feature-card">
             <h3>📋 Comprehensive Reports</h3>
-            <p>Generate detailed reports with customizable metrics and export capabilities for presentations and further analysis.</p>
+            <p>Generate detailed reports with customizable metrics and export capabilities for presentations and further
+              analysis.</p>
           </div>
         </div>
       </div>
@@ -76,18 +81,12 @@
     <!-- Dashboard section starts from here -->
     <div id="dashboard" class="content-section">
       <div class="dashboard-container">
+
         <!-- Dashboard Header with Filters -->
         <div class="dashboard-header">
           <h1 class="dashboard-title">Data Analytics Dashboard</h1>
-          
-          <!-- All the dataset Selection -->
-          <div class="dataset-tabs">
-            <button id="btn-hospitals" onclick="loadData('hospitals')">🏥 Hospitals</button>
-            <button id="btn-preschools" onclick="loadData('preschools')">🏫 Preschools</button>
-            <button id="btn-students" onclick="loadData('students')">👨‍🎓 Students</button>
-          </div>
 
-          <!-- Filters Row -->
+          <!-- Filters -->
           <div class="filters-container">
             <div class="filter-group">
               <label for="regionFilter">Region:</label>
@@ -95,41 +94,65 @@
                 <option value="">All Regions</option>
               </select>
             </div>
-
-            <div class="filter-group">
-              <label for="districtFilter">District:</label>
-              <select id="districtFilter" onchange="applyFilters()">
-                <option value="">All Districts</option>
-              </select>
-            </div>
-
-            <div class="filter-group">
-              <label for="metricSelector">Metric:</label>
-              <select id="metricSelector" onchange="renderChart(currentChartType)">
-                <option value="">Select Metric</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- Chart Controls -->
-          <div class="chart-controls">
-            <button onclick="renderChart('bar')">📊 Bar Chart</button>
-            <button onclick="renderChart('line')">📈 Line Chart</button>
-            <button onclick="renderChart('pie')">🥧 Pie Chart</button>
-            <button class="download-btn" onclick="downloadChart()">💾 Download Chart</button>
-            <button class="download-btn" onclick="downloadCSV()">📄 Download CSV</button>
+            <!-- Add more filters if needed -->
           </div>
         </div>
 
-        <!-- Dashboard Content -->
-        <div class="dashboard-content">
-          <div class="chart-container">
-            <canvas id="myChart"></canvas>
-            <div id="noDataMessage" class="no-data-message" style="display: none;">
-              📊 Select a dataset and metric to view the chart
+        <!-- ⬇️ New Insightful Hospital Dashboard Section -->
+        <div class="insight-dashboard">
+
+          <!-- Summary Cards -->
+          <section class="summary-cards">
+            <div class="card">
+              <h3>Total Hospitals</h3>
+              <p id="totalHospitals">-</p>
             </div>
-          </div>
+            <div class="card">
+              <h3>Avg. Satisfaction</h3>
+              <p id="avgSatisfaction">-</p>
+            </div>
+            <div class="card">
+              <h3>Avg. Bed Capacity</h3>
+              <p id="avgBedCapacity">-</p>
+            </div>
+            <div class="card">
+              <h3>Avg. Medical Staff</h3>
+              <p id="avgMedicalStaff">-</p>
+            </div>
+            <div class="card">
+              <h3>Infra Score</h3>
+              <p id="infraScore">-</p>
+            </div>
+            <div class="card">
+              <h3>Resources Score</h3>
+              <p id="resourcesScore">-</p>
+            </div>
+          </section>
+
+          <!-- Infrastructure Chart -->
+          <section class="chart-container">
+            <h2>Infrastructure Availability</h2>
+            <canvas id="infraBarChart" height="150"></canvas>
+          </section>
+
+          <!-- Additional Charts -->
+          <section class="charts-grid">
+            <div class="chart-box">
+              <h2>Hospitals by Infra Coverage</h2>
+              <canvas id="infraPieChart"></canvas>
+            </div>
+            <div class="chart-box">
+              <h2>Satisfaction Trend</h2>
+              <canvas id="satisfactionLineChart"></canvas>
+            </div>
+            <div class="chart-box">
+              <h2>Top Districts – Infra vs Resource</h2>
+              <canvas id="infraRadarChart"></canvas>
+            </div>
+          </section>
+
         </div>
+
       </div>
     </div>
 
@@ -137,10 +160,12 @@
     <div id="reports" class="content-section">
       <div class="page-content">
         <h1>Reports</h1>
-        <p>Generate comprehensive reports and analytics summaries for your data. This section will contain detailed reporting tools and export capabilities.</p>
+        <p>Generate comprehensive reports and analytics summaries for your data. This section will contain detailed
+          reporting tools and export capabilities.</p>
         <div class="placeholder-content">
           <h3>📋 Reports Module</h3>
-          <p>Advanced reporting features coming soon. You'll be able to create custom reports, schedule automated reports, and export data in various formats.</p>
+          <p>Advanced reporting features coming soon. You'll be able to create custom reports, schedule automated
+            reports, and export data in various formats.</p>
         </div>
       </div>
     </div>
@@ -164,10 +189,12 @@
     <div id="settings" class="content-section">
       <div class="page-content">
         <h1>Settings</h1>
-        <p>Configure your dashboard preferences, data sources, and system settings to customize your analytics experience.</p>
+        <p>Configure your dashboard preferences, data sources, and system settings to customize your analytics
+          experience.</p>
         <div class="placeholder-content">
           <h3>⚙️ System Configuration</h3>
-          <p>Manage your data connections, visualization preferences, user permissions, and notification settings from this centralized control panel.</p>
+          <p>Manage your data connections, visualization preferences, user permissions, and notification settings from
+            this centralized control panel.</p>
         </div>
       </div>
     </div>
@@ -179,14 +206,18 @@
         <p>Manage your profile information, security settings, and account preferences.</p>
         <div class="placeholder-content">
           <h3>👤 Profile Management</h3>
-          <p>Update your personal information, change password, manage API keys, and configure your account security settings.</p>
+          <p>Update your personal information, change password, manage API keys, and configure your account security
+            settings.</p>
         </div>
       </div>
     </div>
 
   </div>
 
-  
+
 </body>
+<!-- JS inclusion -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
 
 </html>

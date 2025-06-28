@@ -19,7 +19,6 @@ instance/
 
 # Log files
 *.log
-*.csv
 *.out
 *.pid
 
