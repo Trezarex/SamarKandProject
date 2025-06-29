@@ -4,220 +4,554 @@
 <head>
   <meta charset="UTF-8" />
   <title>Samarkand Data Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+  <script defer src="{{ url_for('static', filename='js/script.js') }}"></script>
+  <script defer src="{{ url_for('static', filename='js/school.js') }}"></script>
+  <script defer src="{{ url_for('static', filename='js/preschool.js') }}"></script>
+
+  <style>
+    /* Sidebar Dropdown Styling - homepage/chatbot theme */
+    .sidebar-dropdown {
+      position: relative;
+      margin-bottom: 8px;
+    }
+
+    .sidebar-dropdown-toggle {
+      width: 100%;
+      text-align: left;
+      background: none;
+      border: none;
+      padding: 12px 18px;
+      border-radius: 16px;
+      font-size: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #ffffff;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .sidebar-dropdown-toggle.active,
+    .sidebar-dropdown-toggle:focus,
+    .sidebar-dropdown-toggle.open {
+      transform: translateX(5px);
+
+      background: linear-gradient(90deg, rgba(67, 97, 238, 0.2) 0%, transparent 100%);
+      color: white;
+
+    }
+
+    .sidebar-caret {
+      margin-left: auto;
+      font-size: 0.9em;
+    }
+
+    .sidebar-dropdown-menu {
+      display: none;
+      background: transparent;
+      border-radius: 12px;
+      margin-top: 2px;
+      margin-left: 8px;
+      padding: 8px 0 8px 0;
+      box-shadow: none;
+      border: none;
+      min-width: 170px;
+    }
+
+    .sidebar-dropdown.open .sidebar-dropdown-menu {
+      display: block;
+    }
+
+    .sidebar-dropdown-item {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      padding: 8px 24px 8px 32px;
+      background: none;
+      border: none;
+      text-align: left;
+      font-size: 0.98rem;
+      color: #ffffff;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+
+    .sidebar-dropdown-item:hover,
+    .sidebar-dropdown-item:focus {
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      transform: translateX(5px);
+    }
+
+    .sidebar-dropdown-item:active {
+      transform: translateX(5px);
+
+      background: linear-gradient(90deg, rgba(67, 97, 238, 0.2) 0%, transparent 100%);
+      color: white;
+    }
+
+    .sidebar-bullet {
+      color: #4361ee;
+      font-size: 1.1em;
+      margin-right: 10px;
+    }
+
+    .sidebar-icon {
+      font-size: 1.2em;
+      margin-right: 6px;
+    }
+
+    /* Remove old dropdown styles */
+    .dropdown,
+    .dropdown-toggle,
+    .dropdown-menu,
+    .dropdown-item {
+      display: none !important;
+    }
+  </style>
 </head>
 
-
 <body>
-  <!-- Navigation Sidebar -->
+  <!-- Sidebar -->
   <div class="nav-sidebar">
     <div class="nav-header">
       <h2>Samarkand Dashboard</h2>
     </div>
-
     <div class="nav-menu">
-      <button class="nav-item active" onclick="showSection('homepage')">
-        🏠 Homepage
-      </button>
-      <button class="nav-item" onclick="showSection('dashboard')">
-        📊 Dashboard
-      </button>
-      <button class="nav-item" onclick="showSection('reports')">
-        📈 Reports
-      </button>
-      <button class="nav-item" onclick="showSection('chat-bot')">
-        🔮 Chat Bot
-      </button>
-      <button class="nav-item" onclick="showSection('settings')">
-        ⚙️ Settings
-      </button>
-      <button class="nav-item" onclick="showSection('account')">
-        👤 User Account
-      </button>
-    </div>
+      <button class="nav-item active" onclick="showSection('homepage')">🏠 Homepage</button>
 
-    <div class="nav-footer">
-      <button class="logout-btn" onclick="logout()">
-        🚪 Logout
-      </button>
+      <!-- Dashboard Dropdown -->
+      <div class="sidebar-dropdown" id="dashboardDropdownContainer">
+        <button class="nav-item sidebar-dropdown-toggle" id="dashboardDropdownBtn"
+          onclick="toggleDashboardDropdown(event)">
+          <span class="sidebar-icon">📊</span> Dashboard <span class="sidebar-caret" id="dashboardCaret">▼</span>
+        </button>
+        <div class="sidebar-dropdown-menu" id="dashboardDropdown" style="display:none;">
+          <button class="sidebar-dropdown-item" onclick="showSection('hospital-dashboard')"><span class="sidebar-bullet">></span>
+            Hospital Dashboard</button>
+          <button class="sidebar-dropdown-item" onclick="showSection('school-dashboard')"><span class="sidebar-bullet">></span>
+            School Dashboard</button>
+          <button class="sidebar-dropdown-item" onclick="showSection('preschool-dashboard')"><span class="sidebar-bullet">></span>
+            Preschool Dashboard</button>
+        </div>
+      </div>
+
+      <button class="nav-item" onclick="showSection('chat-bot')">🔮 Chat Bot</button>
     </div>
   </div>
 
-  <!-- Main Content Area -->
+  <!-- Main Content -->
   <div class="main-content">
 
-    <!-- Homepage section starts from here -->
+    <!-- Homepage -->
     <div id="homepage" class="content-section active">
       <div class="homepage">
         <div class="hero-section">
           <h1>Welcome to Samarkand Data Analytics</h1>
-          <p>Discover powerful insights from comprehensive data analysis of hospitals, preschools, and educational
-            institutions across the Samarkand region. Our advanced analytics platform provides real-time visualization
-            and predictive modeling to support data-driven decision making.</p>
+          <p>Explore insights for hospitals, schools, and preschools with interactive dashboards and
+            predictive intelligence.</p>
         </div>
-
         <div class="features-grid">
           <div class="feature-card">
             <h3>📊 Interactive Dashboards</h3>
-            <p>Explore dynamic visualizations with real-time filtering and customizable chart types. Get instant
-              insights from your data with our intuitive dashboard interface.</p>
+            <p>Dynamic visualizations with real-time filters and smart comparisons across different datasets.</p>
           </div>
           <div class="feature-card">
-            <h3>🔮 Predictive Insights</h3>
-            <p>Forecast future trends and make informed decisions with our predictive modeling capabilities powered by
-              artificial intelligence.</p>
+            <h3>🔮 AI-Powered Insights</h3>
+            <p>Intelligent chatbot that can analyze your data and provide meaningful insights and recommendations.</p>
           </div>
           <div class="feature-card">
-            <h3>📋 Comprehensive Reports</h3>
-            <p>Generate detailed reports with customizable metrics and export capabilities for presentations and further
-              analysis.</p>
+            <h3>📋 Comprehensive Analytics</h3>
+            <p>Deep dive into infrastructure, resources, and satisfaction metrics with advanced filtering capabilities.
+            </p>
           </div>
         </div>
       </div>
     </div>
-
-    <!-- Dashboard section starts from here -->
-    <div id="dashboard" class="content-section">
+    <!-- Hospital Dashboard -->
+    <div id="hospital-dashboard" class="content-section">
       <div class="dashboard-container">
-
-        <!-- Dashboard Header with Filters -->
         <div class="dashboard-header">
-          <h1 class="dashboard-title">Data Analytics Dashboard</h1>
+          <h1 class="dashboard-title">Hospital Dashboard</h1>
 
           <!-- Filters -->
           <div class="filters-container">
             <div class="filter-group">
-              <label for="regionFilter">Region:</label>
-              <select id="regionFilter" onchange="applyFilters()">
+              <label for="hospitalRegionFilter">Region:</label>
+              <select id="hospitalRegionFilter" onchange="applyHospitalFilters()">
                 <option value="">All Regions</option>
               </select>
             </div>
-            <!-- Add more filters if needed -->
+            <div class="filter-group">
+              <label for="hospitalDistrictFilter">District:</label>
+              <select id="hospitalDistrictFilter" onchange="applyHospitalFilters()">
+                <option value="">All Districts</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label for="hospitalEntityFilter" id="hospitalEntityLabel">Hospital:</label>
+              <select id="hospitalEntityFilter" onchange="applyHospitalFilters()">
+                <option value="">All Hospitals</option>
+              </select>
+            </div>
           </div>
         </div>
 
-        <!-- ⬇️ New Insightful Hospital Dashboard Section -->
-        <div class="insight-dashboard">
+        <!-- Disclaimer -->
+        <div id="hospitalDashboardDisclaimer" class="dashboard-disclaimer" style="display:none;"></div>
 
-          <!-- Summary Cards -->
-          <section class="summary-cards">
-            <div class="card">
-              <h3>Total Hospitals</h3>
-              <p id="totalHospitals">-</p>
-            </div>
-            <div class="card">
-              <h3>Avg. Satisfaction</h3>
-              <p id="avgSatisfaction">-</p>
-            </div>
-            <div class="card">
-              <h3>Avg. Bed Capacity</h3>
-              <p id="avgBedCapacity">-</p>
-            </div>
-            <div class="card">
-              <h3>Avg. Medical Staff</h3>
-              <p id="avgMedicalStaff">-</p>
-            </div>
-            <div class="card">
-              <h3>Infra Score</h3>
-              <p id="infraScore">-</p>
-            </div>
-            <div class="card">
-              <h3>Resources Score</h3>
-              <p id="resourcesScore">-</p>
-            </div>
-          </section>
+        <!-- Summary Cards with tooltips -->
+        <section class="summary-cards">
+          <div class="card">
+            <h3>Total Count
+              <span class="info-tooltip" title="Number of entities in the selected dataset and filters.">ℹ️</span>
+            </h3>
+            <p id="hospitalTotalCount">-</p>
+          </div>
+          <div class="card">
+            <h3>Avg. Satisfaction
+              <span class="info-tooltip" title="Average satisfaction score (0–5 scale).">ℹ️</span>
+            </h3>
+            <p id="hospitalAvgSatisfaction">-</p>
+          </div>
+          <div class="card">
+            <h3>Infrastructure Score
+              <span class="info-tooltip" title="Average infrastructure score (percentage, 0–100%).">ℹ️</span>
+            </h3>
+            <p id="hospitalInfraScore">-</p>
+          </div>
+          <div class="card">
+            <h3>Resources Score
+              <span class="info-tooltip" title="Average resources score (percentage, 0–100%).">ℹ️</span>
+            </h3>
+            <p id="hospitalResourcesScore">-</p>
+          </div>
+        </section>
 
-          <!-- Infrastructure Chart -->
-          <section class="chart-container">
-            <h2>Infrastructure Availability</h2>
-            <canvas id="infraBarChart" height="150"></canvas>
-          </section>
+        <!-- Charts -->
+        <section class="charts-grid">
+          <div class="chart-box">
+            <h2>Infrastructure vs Resources</h2>
+            <canvas id="hospitalInfraChart"></canvas>
+          </div>
+          <div class="chart-box">
+            <h2>Satisfaction Distribution</h2>
+            <canvas id="hospitalSatisfactionChart"></canvas>
+          </div>
+          <div class="chart-box">
+            <h2>Regional Comparison</h2>
+            <canvas id="hospitalRegionalChart"></canvas>
+          </div>
+          <div class="chart-box">
+            <h2>Performance Metrics</h2>
+            <canvas id="hospitalPerformanceChart"></canvas>
+          </div>
+        </section>
 
-          <!-- Additional Charts -->
-          <section class="charts-grid">
-            <div class="chart-box">
-              <h2>Hospitals by Infra Coverage</h2>
-              <canvas id="infraPieChart"></canvas>
-            </div>
-            <div class="chart-box">
-              <h2>Satisfaction Trend</h2>
-              <canvas id="satisfactionLineChart"></canvas>
-            </div>
-            <div class="chart-box">
-              <h2>Top Districts – Infra vs Resource</h2>
-              <canvas id="infraRadarChart"></canvas>
-            </div>
-          </section>
-
+        <!-- Loading/Error Overlay -->
+        <div id="hospitalDashboardOverlay" class="dashboard-overlay" style="display:none;">
+          <div class="overlay-content">
+            <div class="spinner"></div>
+            <div id="hospitalOverlayMessage">Loading dashboard data...</div>
+          </div>
         </div>
 
+        <!-- Modal for drill-down -->
+        <div id="hospitalModal" class="modal" style="display:none;">
+          <div class="modal-content">
+            <span class="close" id="hospital-modal-close">&times;</span>
+            <div id="hospital-modal-body">
+              <!-- Drill-down details will be rendered here by JS -->
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
-    <!-- Reports section starts from here -->
-    <div id="reports" class="content-section">
-      <div class="page-content">
-        <h1>Reports</h1>
-        <p>Generate comprehensive reports and analytics summaries for your data. This section will contain detailed
-          reporting tools and export capabilities.</p>
-        <div class="placeholder-content">
-          <h3>📋 Reports Module</h3>
-          <p>Advanced reporting features coming soon. You'll be able to create custom reports, schedule automated
-            reports, and export data in various formats.</p>
+    <!-- School Dashboard -->
+    <div id="school-dashboard" class="content-section">
+      <div class="dashboard-container">
+        <div class="dashboard-header">
+          <h1 class="dashboard-title">School Dashboard</h1>
+
+          <!-- Filters -->
+          <div class="filters-container">
+            <div class="filter-group">
+              <label for="schoolRegionFilter">Region:</label>
+              <select id="schoolRegionFilter" onchange="applySchoolFilters()">
+                <option value="">All Regions</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label for="schoolDistrictFilter">District:</label>
+              <select id="schoolDistrictFilter" onchange="applySchoolFilters()">
+                <option value="">All Districts</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label for="schoolEntityFilter" id="schoolEntityLabel">School:</label>
+              <select id="schoolEntityFilter" onchange="applySchoolFilters()">
+                <option value="">All Schools</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Disclaimer -->
+        <div id="schoolDashboardDisclaimer" class="dashboard-disclaimer" style="display:none;"></div>
+
+        <!-- Summary Cards with tooltips -->
+        <section class="summary-cards">
+          <div class="card">
+            <h3>Total Count
+              <span class="info-tooltip" title="Number of entities in the selected dataset and filters.">ℹ️</span>
+            </h3>
+            <p id="schoolTotalCount">-</p>
+          </div>
+          <div class="card">
+            <h3>Avg. Satisfaction
+              <span class="info-tooltip" title="Average satisfaction score (0–5 scale).">ℹ️</span>
+            </h3>
+            <p id="schoolAvgSatisfaction">-</p>
+          </div>
+          <div class="card">
+            <h3>Infrastructure Score
+              <span class="info-tooltip" title="Average infrastructure score (percentage, 0–100%).">ℹ️</span>
+            </h3>
+            <p id="schoolInfraScore">-</p>
+          </div>
+          <div class="card">
+            <h3>Resources Score
+              <span class="info-tooltip" title="Average resources score (percentage, 0–100%).">ℹ️</span>
+            </h3>
+            <p id="schoolResourcesScore">-</p>
+          </div>
+        </section>
+
+        <!-- Charts -->
+        <section class="charts-grid">
+          <div class="chart-box">
+            <h2>Infrastructure vs Resources</h2>
+            <canvas id="schoolInfraChart"></canvas>
+          </div>
+          <div class="chart-box">
+            <h2>Satisfaction Distribution</h2>
+            <canvas id="schoolSatisfactionChart"></canvas>
+          </div>
+          <div class="chart-box">
+            <h2>Regional Comparison</h2>
+            <canvas id="schoolRegionalChart"></canvas>
+          </div>
+          <div class="chart-box">
+            <h2>Performance Metrics</h2>
+            <canvas id="schoolPerformanceChart"></canvas>
+          </div>
+        </section>
+
+        <!-- Loading/Error Overlay -->
+        <div id="schoolDashboardOverlay" class="dashboard-overlay" style="display:none;">
+          <div class="overlay-content">
+            <div class="spinner"></div>
+            <div id="schoolOverlayMessage">Loading dashboard data...</div>
+          </div>
+        </div>
+
+        <!-- Modal for drill-down -->
+        <div id="schoolModal" class="modal" style="display:none;">
+          <div class="modal-content">
+            <span class="close" id="school-modal-close">&times;</span>
+            <div id="school-modal-body">
+              <!-- Drill-down details will be rendered here by JS -->
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Predictions section starts from here -->
+    <!-- Preschool Dashboard -->
+    <div id="preschool-dashboard" class="content-section">
+      <div class="dashboard-container">
+        <div class="dashboard-header">
+          <h1 class="dashboard-title">Preschool Dashboard</h1>
+
+
+          <!-- Filters -->
+          <div class="filters-container">
+            <div class="filter-group">
+              <label for="preschoolRegionFilter">Region:</label>
+              <select id="preschoolRegionFilter" onchange="applyPreschoolFilters()">
+                <option value="">All Regions</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label for="preschoolDistrictFilter">District:</label>
+              <select id="preschoolDistrictFilter" onchange="applyPreschoolFilters()">
+                <option value="">All Districts</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label for="preschoolEntityFilter" id="preschoolEntityLabel">Preschool:</label>
+              <select id="preschoolEntityFilter" onchange="applyPreschoolFilters()">
+                <option value="">All Preschools</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Disclaimer -->
+        <div id="preschoolDashboardDisclaimer" class="dashboard-disclaimer" style="display:none;"></div>
+
+        <!-- Summary Cards with tooltips -->
+        <section class="summary-cards">
+          <div class="card">
+            <h3>Total Count
+              <span class="info-tooltip" title="Number of entities in the selected dataset and filters.">ℹ️</span>
+            </h3>
+            <p id="preschoolTotalCount">-</p>
+          </div>
+          <div class="card">
+            <h3>Avg. Satisfaction
+              <span class="info-tooltip" title="Average satisfaction score (0–5 scale).">ℹ️</span>
+            </h3>
+            <p id="preschoolAvgSatisfaction">-</p>
+          </div>
+          <div class="card">
+            <h3>Infrastructure Score
+              <span class="info-tooltip" title="Average infrastructure score (percentage, 0–100%).">ℹ️</span>
+            </h3>
+            <p id="preschoolInfraScore">-</p>
+          </div>
+          <div class="card">
+            <h3>Resources Score
+              <span class="info-tooltip" title="Average resources score (percentage, 0–100%).">ℹ️</span>
+            </h3>
+            <p id="preschoolResourcesScore">-</p>
+          </div>
+        </section>
+
+        <!-- Charts -->
+        <section class="charts-grid">
+          <div class="chart-box">
+            <h2>Infrastructure vs Resources</h2>
+            <canvas id="preschoolInfraChart"></canvas>
+          </div>
+          <div class="chart-box">
+            <h2>Satisfaction Distribution</h2>
+            <canvas id="preschoolSatisfactionChart"></canvas>
+          </div>
+          <div class="chart-box">
+            <h2>Regional Comparison</h2>
+            <canvas id="preschoolRegionalChart"></canvas>
+          </div>
+          <div class="chart-box">
+            <h2>Performance Metrics</h2>
+            <canvas id="preschoolPerformanceChart"></canvas>
+          </div>
+        </section>
+
+        <!-- Loading/Error Overlay -->
+        <div id="preschoolDashboardOverlay" class="dashboard-overlay" style="display:none;">
+          <div class="overlay-content">
+            <div class="spinner"></div>
+            <div id="preschoolOverlayMessage">Loading dashboard data...</div>
+          </div>
+        </div>
+
+        <!-- Modal for drill-down -->
+        <div id="preschoolModal" class="modal" style="display:none;">
+          <div class="modal-content">
+            <span class="close" id="preschool-modal-close">&times;</span>
+            <div id="preschool-modal-body">
+              <!-- Drill-down details will be rendered here by JS -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chatbot -->
     <div id="chat-bot" class="content-section">
       <div class="page-content">
-        <h1>Chat Bot</h1>
-        <p>Talk to our agent</p>
+        <h1>AI Data Assistant</h1>
+        <p>Ask questions about your data and get intelligent insights powered by AI.</p>
         <div class="chatbot-container">
-          <div id="chat-messages" class="chat-messages"></div>
+          <div id="chat-messages" class="chat-messages">
+            <div class="bot-message">
+              Hello! I'm your AI data assistant. I can help you analyze the Samarkand hospital, school, and preschool
+              data. Ask me questions like:
+              <br><br>
+              • "What's the average satisfaction score?"<br>
+              • "Which region has the best infrastructure?"<br>
+              • "Show me hospitals with low resources"<br>
+              • "Compare satisfaction across districts"
+            </div>
+          </div>
           <form id="chat-form" class="chat-form" onsubmit="return sendMessage(event)">
-            <input type="text" id="chat-input" placeholder="Type your message..." autocomplete="off" required />
-            <button type="submit">Send</button>
+            <input type="text" id="chat-input" placeholder="Ask me about the data..." required />
+            <button type="submit" id="chat-submit">Send</button>
           </form>
         </div>
       </div>
     </div>
 
-    <!-- Settings section starts from here -->
-    <div id="settings" class="content-section">
-      <div class="page-content">
-        <h1>Settings</h1>
-        <p>Configure your dashboard preferences, data sources, and system settings to customize your analytics
-          experience.</p>
-        <div class="placeholder-content">
-          <h3>⚙️ System Configuration</h3>
-          <p>Manage your data connections, visualization preferences, user permissions, and notification settings from
-            this centralized control panel.</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- User Account section starts from here -->
-    <div id="account" class="content-section">
-      <div class="page-content">
-        <h1>User Account</h1>
-        <p>Manage your profile information, security settings, and account preferences.</p>
-        <div class="placeholder-content">
-          <h3>👤 Profile Management</h3>
-          <p>Update your personal information, change password, manage API keys, and configure your account security
-            settings.</p>
-        </div>
-      </div>
-    </div>
-
   </div>
 
+  <script>
+    function toggleDashboardDropdown(e) {
+      e.stopPropagation();
+      const btn = document.getElementById('dashboardDropdownBtn');
+      const caret = document.getElementById('dashboardCaret');
+      const menu = document.getElementById('dashboardDropdown');
+      const isOpen = menu.style.display === 'block';
+      menu.style.display = isOpen ? 'none' : 'block';
+      btn.classList.toggle('open', !isOpen);
+      btn.classList.toggle('active', !isOpen);
+      caret.textContent = !isOpen ? '▲' : '▼';
+      menu.setAttribute('aria-expanded', !isOpen ? 'true' : 'false');
+    }
 
+    // Hide dropdown if clicking outside
+    window.addEventListener('click', function (e) {
+      const menu = document.getElementById('dashboardDropdown');
+      const btn = document.getElementById('dashboardDropdownBtn');
+      if (menu && btn && !btn.contains(e.target) && !menu.contains(e.target)) {
+        menu.style.display = 'none';
+        btn.classList.remove('open', 'active');
+        document.getElementById('dashboardCaret').textContent = '▼';
+        menu.setAttribute('aria-expanded', 'false');
+      }
+    });
+
+    function showDashboard(type) {
+      // Hide all dashboards
+      document.getElementById('hospital-dashboard').classList.remove('active');
+      document.getElementById('school-dashboard').classList.remove('active');
+      document.getElementById('preschool-dashboard').classList.remove('active');
+      // Show the selected one
+      document.getElementById(type + '-dashboard').classList.add('active');
+
+      // Update sidebar dropdown active state
+      const items = document.querySelectorAll('.sidebar-dropdown-item');
+      items.forEach(item => {
+        if (item.textContent.toLowerCase().includes(type)) {
+          item.classList.add('active');
+        } else {
+          item.classList.remove('active');
+        }
+      });
+
+      // Optionally: update dashboard title if needed
+      // ...
+
+      // Load data for the selected dashboard (call dashboard-specific loader if implemented)
+      if (typeof window[`load${type.charAt(0).toUpperCase() + type.slice(1)}DashboardData`] === 'function') {
+        window[`load${type.charAt(0).toUpperCase() + type.slice(1)}DashboardData`]();
+      }
+    }
+  </script>
 </body>
-<!-- JS inclusion -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="{{ url_for('static', filename='js/script.js') }}"></script>
 
 </html>
