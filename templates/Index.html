@@ -117,8 +117,9 @@
 <body>
   <!-- Sidebar -->
   <div class="nav-sidebar">
-    <div class="nav-header">
-      <h2>Samarkand Dashboard</h2>
+    <div class="nav-header" style="display: flex; align-items: center;">
+      <h2 style="margin: 0;">Samarkand Dashboard</h2>
+      <img id="samarkandLogo" src="{{ url_for('static', filename='images/flag.svg') }}" alt="Samarkand Logo" style="height: 65px; width: auto; vertical-align: middle;" />
     </div>
     <div class="nav-menu">
       <button class="nav-item active" onclick="showSection('homepage')">🏠 Homepage</button>
