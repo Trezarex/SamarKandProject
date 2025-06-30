@@ -8,6 +8,12 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+  <!-- Choices.js CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
+
+  <!-- Choices.js JS -->
+  <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+
   <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
 
   <script defer src="{{ url_for('static', filename='js/script.js') }}"></script>
@@ -120,7 +126,8 @@
 <body>
   <!-- Sidebar -->
   <div class="nav-sidebar">
-    <div class="nav-header" style="display: flex; align-items: center; cursor: pointer;" onclick="window.location.reload();">
+    <div class="nav-header" style="display: flex; align-items: center; cursor: pointer;"
+      onclick="window.location.reload();">
       <h2 style="margin: 0;">Samarkand Dashboard</h2>
       <img id="samarkandLogo" src="{{ url_for('static', filename='images/flag.svg') }}" alt="Samarkand Logo"
         style="height: 65px; width: auto; vertical-align: middle;" />
@@ -188,121 +195,12 @@
           <!-- Filters -->
           <div class="filters-container">
             <div class="filter-group">
-              <label for="hospitalRegionFilter">Region:</label>
-              <select id="hospitalRegionFilter" onchange="applyHospitalFilters()">
-                <option value="">All Regions</option>
-              </select>
-            </div>
-            <div class="filter-group">
               <label for="hospitalDistrictFilter">District:</label>
-              <select id="hospitalDistrictFilter" onchange="applyHospitalFilters()">
-                <option value="">All Districts</option>
-              </select>
+              <select id="hospitalDistrictFilter" multiple onchange="applyHospitalFilters()"></select>
             </div>
             <div class="filter-group">
               <label for="hospitalEntityFilter" id="hospitalEntityLabel">Hospital:</label>
-              <select id="hospitalEntityFilter" onchange="applyHospitalFilters()">
-                <option value="">All Hospitals</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <!-- Disclaimer -->
-        <div id="hospitalDashboardDisclaimer" class="dashboard-disclaimer" style="display:none;"></div>
-
-        <!-- Summary Cards with tooltips -->
-        <section class="summary-cards">
-          <div class="card">
-            <h3>Total Count
-              <span class="info-tooltip" title="Number of entities in the selected dataset and filters.">ℹ️</span>
-            </h3>
-            <p id="hospitalTotalCount">-</p>
-          </div>
-          <div class="card">
-            <h3>Avg. Satisfaction
-              <span class="info-tooltip" title="Average satisfaction score (0–5 scale).">ℹ️</span>
-            </h3>
-            <p id="hospitalAvgSatisfaction">-</p>
-          </div>
-          <div class="card">
-            <h3>Infrastructure Score
-              <span class="info-tooltip" title="Average infrastructure score (percentage, 0–100%).">ℹ️</span>
-            </h3>
-            <p id="hospitalInfraScore">-</p>
-          </div>
-          <div class="card">
-            <h3>Resources Score
-              <span class="info-tooltip" title="Average resources score (percentage, 0–100%).">ℹ️</span>
-            </h3>
-            <p id="hospitalResourcesScore">-</p>
-          </div>
-        </section>
-
-
-        <!-- Map Section -->
-        <section>
-          <h2 style="color: black;">📍 Hospital Map by Need Category</h2>
-          <div id="hospitalMap" style="height: 400px; border-radius: 12px; margin-bottom: 20px;"></div>
-        </section>
-
-
-        <!-- Charts -->
-        <section class="charts-grid">
-          <div class="chart-box">
-            <h2>Infrastructure vs Resources</h2>
-            <canvas id="hospitalInfraChart"></canvas>
-          </div>
-          <div class="chart-box">
-            <h2>Satisfaction Distribution</h2>
-            <canvas id="hospitalSatisfactionChart"></canvas>
-          </div>
-          <div class="chart-box">
-            <h2>Regional Comparison</h2>
-            <canvas id="hospitalRegionalChart"></canvas>
-          </div>
-          <div class="chart-box">
-            <h2>Performance Metrics</h2>
-            <canvas id="hospitalPerformanceChart"></canvas>
-          </div>
-        </section>
-
-
-        <!-- Enhanced KPIs -->
-        <section class="enhanced-kpis">
-          <div class="kpi-card" id="kpiTotalHospitals">Total Hospitals: -</div>
-          <div class="kpi-card" id="kpiRedFlagged">🚨 RED Flagged: -</div>
-          <div class="kpi-card" id="kpiAvgInfra">Infra Score (avg): -</div>
-          <div class="kpi-card" id="kpiAvgResource">Resources Score (avg): -</div>
-          <div class="kpi-card" id="kpiAvgPopulation">Population Score (avg): -</div>
-        </section>
-
-        <!-- Insights Tables -->
-        <section class="insight-tables">
-          <div class="insight-block">
-            <h3 style="color: white;">Top 5 Overcrowded Hospitals</h3>
-            <table id="topOvercrowdedTable"></table>
-          </div>
-          <div class="insight-block">
-            <h3 style="color: white;">High Infra, Low Resource Hospitals</h3>
-            <table id="infraResourceMismatchTable"></table>
-          </div>
-        </section>
-
-        <!-- Loading/Error Overlay -->
-        <div id="hospitalDashboardOverlay" class="dashboard-overlay" style="display:none;">
-          <div class="overlay-content">
-            <div class="spinner"></div>
-            <div id="hospitalOverlayMessage">Loading dashboard data...</div>
-          </div>
-        </div>
-
-        <!-- Modal for drill-down -->
-        <div id="hospitalModal" class="modal" style="display:none;">
-          <div class="modal-content">
-            <span class="close" id="hospital-modal-close">&times;</span>
-            <div id="hospital-modal-body">
-              <!-- Drill-down details will be rendered here by JS -->
+              <select id="hospitalEntityFilter" multiple onchange="applyHospitalFilters()"></select>
             </div>
           </div>
         </div>

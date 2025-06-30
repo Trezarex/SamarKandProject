@@ -87,6 +87,11 @@ body {
     transition: all 0.3s ease;
 }
 
+.nav-sidebar.hidden {
+  transform: translateX(-100%);
+}
+
+
 .nav-header {
     padding: 30px 25px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
@@ -169,13 +174,18 @@ body {
 
 /* Main Content Area */
 .main-content {
-    flex: 1;
-    margin-left: 280px;
-    padding: 30px;
-    overflow-y: auto;
-    min-height: 100vh;
-    background-color: #f0f2f5;
-    transition: all 0.3s ease;
+  flex: 1;
+  margin-left: 280px; /* matches sidebar width */
+  padding: 30px;
+  overflow-y: auto;
+  min-height: 100vh;
+  background-color: #f0f2f5;
+  transition: all 0.3s ease;
+}
+
+/* When sidebar is hidden, collapse margin */
+.nav-sidebar.hidden ~ .main-content {
+  margin-left: 0;
 }
 
 /* Content Sections */

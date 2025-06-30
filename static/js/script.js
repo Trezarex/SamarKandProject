@@ -18,281 +18,192 @@ function showSection(sectionId) {
       }, 300);
     }
   }
-
 }
 document.addEventListener("DOMContentLoaded", () => {
-  loadHospitalDashboardData();
-  loadPreschoolDashboardData();
-  loadSchoolDashboardData();
+  loadHospitalData();
+  loadPreschoolData();
+  loadSchoolData();
 });
 
-function loadHospitalDashboardData() {
-  fetchAndRenderHospitalData();
-  populateHospitalFilters();
+// Global variable to hold hospital data
+let hospitalData = [];
+let infrastructureData = [];
+let populationData = [];
+let resourcesData = [];
+let districtChoices;
+let hospitalChoices;
+
+
+
+
+// Main function to load hospital data from backend
+async function loadHospitalData() {
+  try {
+    const response = await fetch('/api/hospital-data');
+    const data = await response.json();
+
+    if (data.error) {
+      console.error("❌ Error fetching hospital data:", data.error);
+      return;
+    }
+
+    hospitalData = data;
+
+    infrastructureData = hospitalData.map(h => ({
+      hospital_name: h.hospital_name,
+      outside_branches: h.outside_branches,
+      land_area_built: h.land_area_built,
+      vacant_land_area: h.vacant_land_area,
+      building_count: h.building_count,
+      floors: h.floors,
+      wall_material: h.wall_material,
+      wall_condition: h.wall_condition,
+      roof_material: h.roof_material,
+      roof_condition: h.roof_condition,
+      window_condition: h.window_condition,
+      floor_condition: h.floor_condition,
+      door_condition: h.door_condition,
+      earthquake_safe: h.earthquake_safe,
+      age_score: h.age_score,
+      infrastructure_score: h.infrastructure_score
+    }));
+
+
+    populationData = hospitalData.map(h => ({
+      hospital_name: h.hospital_name,
+      medical_staff: h.medical_staff,
+      bed_capacity: h.bed_capacity,
+      population_score: h.population_score,
+      total_staff: h.total_staff
+    }));
+
+    resourcesData = hospitalData.map(h => ({
+      hospital_name: h.hospital_name,
+      toilet_water_supply: h.toilet_water_supply,
+      electricity_supply: h.electricity_supply,
+      has_generator: h.has_generator,
+      has_solar_panels: h.has_solar_panels,
+      internal_electric_condition: h.internal_electric_condition,
+      lighting_condition: h.lighting_condition,
+      heating_source: h.heating_source,
+      heating_condition: h.heating_condition,
+      has_water: h.has_water,
+      drinking_water_source: h.drinking_water_source,
+      has_fence: h.has_fence,
+      internet_type: h.internet_type,
+      fire_safety: h.fire_safety,
+      has_cctv: h.has_cctv,
+      has_transport_nearby: h.has_transport_nearby,
+      recent_repairs: h.recent_repairs,
+      restroom_location: h.restroom_location,
+      restroom_water_condition: h.restroom_water_condition,
+      restroom_has_sewage: h.restroom_has_sewage,
+      restroom_doors: h.restroom_doors,
+      restroom_handwash_available: h.restroom_handwash_available,
+      restroom_sewage_issues: h.restroom_sewage_issues,
+      restroom_water_issues: h.restroom_water_issues,
+      restroom_light_safe: h.restroom_light_safe,
+      is_warm_in_winter: h.is_warm_in_winter,
+      has_water_pipeline: h.has_water_pipeline,
+      satisfaction: h.satisfaction,
+      resources_score: h.resources_score
+    }));
+    populateHospitalFilters();
+
+  } catch (error) {
+    console.error("❌ Fetch failed:", error);
+  }
 }
 
-// =======================
-// Fetch + Render Main Function
-// =======================
-function fetchAndRenderHospitalData() {
-  const region = document.getElementById("hospitalRegionFilter").value;
-  const district = document.getElementById("hospitalDistrictFilter").value;
-  const hospital = document.getElementById("hospitalEntityFilter").value;
-
-  const url = new URL("/api/hospital-data", window.location.origin);
-  if (region) url.searchParams.append("region", region);
-  if (district) url.searchParams.append("district", district);
-  if (hospital) url.searchParams.append("hospital_name", hospital);
-
-  document.getElementById("hospitalDashboardOverlay").style.display = "block";
-
-  fetch(url)
-    .then(res => res.json())
-    .then(data => {
-      document.getElementById("hospitalDashboardOverlay").style.display = "none";
-      if (data.summary) {
-        updateHospitalSummaryCards(data.summary);
-        renderHospitalCharts(data.charts);
-      } else {
-        alert("No data available for the selected filters.");
-      }
-    })
-    .catch(err => {
-      document.getElementById("hospitalDashboardOverlay").style.display = "none";
-      alert("Failed to load data for the selected filters.");
-      console.error("Error loading hospital dashboard:", err);
-    });
-}
-
-// =======================
-// Update Summary Cards
-// =======================
-function updateHospitalSummaryCards(summary) {
-  document.getElementById("hospitalTotalCount").innerText = summary.total_count;
-  document.getElementById("hospitalAvgSatisfaction").innerText = summary.avg_satisfaction;
-  document.getElementById("hospitalInfraScore").innerText = summary.infrastructure_score;
-  document.getElementById("hospitalResourcesScore").innerText = summary.resources_score;
-}
-
-// =======================
-// Filter Logic
-// =======================
 function populateHospitalFilters() {
-  fetch("/api/hospital-data")
-    .then(res => res.json())
-    .then(data => {
-      if (!data) return;
-      fetch("/api/hospital-data")
-        .then(res => res.json())
-        .then(data => {
-          const regionSet = new Set();
-          const districtSet = new Set();
-          const hospitalSet = new Set();
+  const rawDistricts = [...new Set(hospitalData.map(h => h.district))].sort();
+  const rawHospitals = [...new Set(hospitalData.map(h => h.hospital_name))].sort();
 
-          data.charts.infra_vs_resources.forEach(item => {
-            hospitalSet.add(item.hospital_name);
-          });
-          data.charts.regional_comparison.forEach(item => {
-            regionSet.add(item.region);
-          });
-
-          // Since district info isn't in regional_comparison, fallback
-          data.charts.infra_vs_resources.forEach(item => {
-            if (item.district) districtSet.add(item.district);
-          });
-
-          setSelectOptions("hospitalRegionFilter", regionSet);
-          setSelectOptions("hospitalDistrictFilter", districtSet);
-          setSelectOptions("hospitalEntityFilter", hospitalSet);
-        });
+  // Initialize Choices
+  if (!districtChoices) {
+    districtChoices = new Choices("#hospitalDistrictFilter", {
+      removeItemButton: true,
+      placeholderValue: "Select District(s)",
+      searchPlaceholderValue: "Search district",
     });
-}
-
-function setSelectOptions(elementId, valuesSet) {
-  const select = document.getElementById(elementId);
-  select.innerHTML = `<option value="">All</option>`;
-  Array.from(valuesSet)
-    .sort()
-    .forEach(val => {
-      const option = document.createElement("option");
-      option.value = val;
-      option.textContent = val;
-      select.appendChild(option);
-    });
-}
-
-// =======================
-// Chart Rendering
-// =======================
-
-let hospitalInfraChart, hospitalSatisfactionChart, hospitalRegionalChart, hospitalPerformanceChart;
-
-function renderHospitalCharts(data) {
-  renderInfraVsResources(data.infra_vs_resources);
-  renderSatisfactionDistribution(data.satisfaction_distribution);
-  renderRegionalComparison(data.regional_comparison);
-  renderPerformanceMetrics(data.performance_metrics);
-}
-
-function renderInfraVsResources(rows) {
-  const labels = rows.map(d => d.hospital_name);
-  const infra = rows.map(d => d.infrastructure_score);
-  const resources = rows.map(d => d.resources_score);
-
-  if (hospitalInfraChart) hospitalInfraChart.destroy();
-  hospitalInfraChart = new Chart(document.getElementById("hospitalInfraChart"), {
-    type: "bar",
-    data: {
-      labels,
-      datasets: [
-        { label: "Infrastructure", data: infra },
-        { label: "Resources", data: resources }
-      ]
-    }
-  });
-}
-
-function renderSatisfactionDistribution(values) {
-  if (hospitalSatisfactionChart) hospitalSatisfactionChart.destroy();
-  hospitalSatisfactionChart = new Chart(document.getElementById("hospitalSatisfactionChart"), {
-    type: "bar",
-    data: {
-      labels: values.map((_, i) => `Score ${i + 1}`),
-      datasets: [{ label: "Satisfaction", data: values }]
-    }
-  });
-}
-
-function renderRegionalComparison(rows) {
-  const labels = rows.map(d => d.region);
-  const infra = rows.map(d => d.infrastructure_score);
-  const resources = rows.map(d => d.resources_score);
-
-  if (hospitalRegionalChart) hospitalRegionalChart.destroy();
-  hospitalRegionalChart = new Chart(document.getElementById("hospitalRegionalChart"), {
-    type: "bar",
-    data: {
-      labels,
-      datasets: [
-        { label: "Infrastructure", data: infra },
-        { label: "Resources", data: resources }
-      ]
-    }
-  });
-}
-
-function renderPerformanceMetrics(data) {
-  if (hospitalPerformanceChart) hospitalPerformanceChart.destroy();
-  hospitalPerformanceChart = new Chart(document.getElementById("hospitalPerformanceChart"), {
-    type: "radar",
-    data: {
-      labels: data.labels,
-      datasets: [
-        {
-          label: "Performance",
-          data: data.values,
-          fill: true
-        }
-      ]
-    }
-  });
-}
-
-function fetchHospitalExtendedData() {
-  fetch("/api/hospital-extended-data")
-    .then(res => res.json())
-    .then(data => {
-      updateKPIcards(data.summary_kpis);
-      renderHospitalMap(data.map_points, data.zones);
-      renderInsightTable("topOvercrowdedTable", data.top_overcrowded);
-      renderInsightTable("infraResourceMismatchTable", data.high_infra_low_resource);
-    })
-    .catch(err => console.error("Extended hospital data error:", err));
-}
-
-function updateKPIcards(kpis) {
-  document.getElementById("kpiTotalHospitals").textContent = `Total Hospitals: ${kpis.total_hospitals}`;
-  document.getElementById("kpiRedFlagged").textContent = `🚨 RED Flagged: ${kpis.red_flagged}`;
-  document.getElementById("kpiAvgInfra").textContent = `Infra Score (avg): ${kpis.avg_infra}`;
-  document.getElementById("kpiAvgResource").textContent = `Resources Score (avg): ${kpis.avg_resource}`;
-  document.getElementById("kpiAvgPopulation").textContent = `Population Score (avg): ${kpis.avg_population}`;
-}
-
-function renderInsightTable(tableId, rows) {
-  const table = document.getElementById(tableId);
-  if (!rows || rows.length === 0) {
-    table.innerHTML = "<tr><td>No data available</td></tr>";
-    return;
-  }
-  const headers = Object.keys(rows[0]);
-  const thead = `<thead><tr>${headers.map(h => `<th>${h}</th>`).join("")}</tr></thead>`;
-  const tbody = `<tbody>${rows.map(row => `
-    <tr>${headers.map(h => `<td>${row[h]}</td>`).join("")}</tr>
-  `).join("")}</tbody>`;
-  table.innerHTML = thead + tbody;
-}
-
-function renderHospitalMap(points, zones) {
-  // Remove existing map if it exists
-  if (window.hospitalMapInstance) {
-    window.hospitalMapInstance.remove();
   }
 
-  // Create new map instance
-  const map = L.map("hospitalMap").setView([39.8, 66.8], 8);
-  window.hospitalMapInstance = map;
+  if (!hospitalChoices) {
+    hospitalChoices = new Choices("#hospitalEntityFilter", {
+      removeItemButton: true,
+      placeholderValue: "Select Hospital(s)",
+      searchPlaceholderValue: "Search hospital",
+    });
+  }
 
-  // Add tile layer
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    attribution: '&copy; OpenStreetMap contributors'
-  }).addTo(map);
+  // Set initial choices
+  districtChoices.setChoices(
+    rawDistricts.map(d => ({ value: d, label: d })),
+    'value', 'label', true
+  );
 
-  // Unified color logic
-  const getColorByCategory = (cat) => {
-    const category = (cat || "").toUpperCase();
-    if (category === "GREEN") return "#228B22"; // forest green
-    if (category === "YELLOW") return "#FFD700"; // gold yellow
-    return "#B22222"; // firebrick red
-  };
+  hospitalChoices.setChoices(
+    rawHospitals.map(h => ({ value: h, label: h })),
+    'value', 'label', true
+  );
 
-  // ✅ Draw zone circles around hospitals
-  points.forEach(p => {
-    const color = getColorByCategory(p.predicted_need_Category);
-    const circle = L.circle([p.latitude, p.longitude], {
-      radius: 8000,
-      color: color,
-      fillColor: color,
-      fillOpacity: 0.01,
-      weight: 0.8
-    }).addTo(map);
+  // 🧠 Update hospitals dynamically when districts change
+  document.querySelector("#hospitalDistrictFilter").addEventListener("change", () => {
+    const selectedDistricts = districtChoices.getValue(true); // array of selected districts
 
-    circle.bindPopup(`<b>${p.hospital_name}</b><br>${p.region}, ${p.district}<br>Need: ${p.predicted_need_Category}`);
-  });
+    const filteredHospitals = hospitalData
+      .filter(h => selectedDistricts.length === 0 || selectedDistricts.includes(h.district))
+      .map(h => h.hospital_name);
 
-  // ✅ Add colored circle markers for hospitals
-  points.forEach(p => {
-    const color = getColorByCategory(p.predicted_need_Category);
-    const marker = L.circleMarker([p.latitude, p.longitude], {
-      radius: 6,
-      fillColor: color,
-      color: "#fff",
-      weight: 1,
-      opacity: 1,
-      fillOpacity: 0.9
-    }).addTo(map);
+    const uniqueFilteredHospitals = [...new Set(filteredHospitals)].sort();
 
-    marker.bindPopup(`<b>${p.hospital_name}</b><br>${p.region}, ${p.district}<br>Need: ${p.predicted_need_Category}`);
+    hospitalChoices.clearChoices();
+    hospitalChoices.setChoices(
+      uniqueFilteredHospitals.map(h => ({ value: h, label: h })),
+      'value', 'label', true
+    );
   });
 }
 
+let filteredHospitalData = [];
 
-
-fetchHospitalExtendedData(); // function for extended insights
-
-
-// =======================
-// Filters Trigger Fetch
-// =======================
 function applyHospitalFilters() {
-  fetchAndRenderHospitalData();
+  const selectedDistricts = districtChoices.getValue(true); // array of selected district values
+  const selectedHospitals = hospitalChoices.getValue(true); // array of selected hospital names
+
+  // Filter hospitalData based on both
+  filteredHospitalData = hospitalData.filter(h => {
+    const districtMatch = selectedDistricts.length === 0 || selectedDistricts.includes(h.district);
+    const hospitalMatch = selectedHospitals.length === 0 || selectedHospitals.includes(h.hospital_name);
+    return districtMatch && hospitalMatch;
+  });
+
+  console.log("🔍 Filtered hospital data:", filteredHospitalData);
+
+  // TODO: Use `filteredHospitalData` to update:
+  // updateHospitalSummaryCards(filteredHospitalData);
+  // updateHospitalCharts(filteredHospitalData);
+  // updateHospitalMap(filteredHospitalData);
+  // updateHospitalTables(filteredHospitalData);
 }
+
+
+// Function to auto-hide/show sidebar based on mouse position
+let sidebarVisible = true;
+const sidebar = document.querySelector('.nav-sidebar');
+
+document.addEventListener('mousemove', (e) => {
+  const x = e.clientX;
+
+  // Show sidebar if mouse is near the left edge
+  if (x < 30 && !sidebarVisible) {
+    sidebar.classList.remove('hidden');
+    sidebarVisible = true;
+  }
+
+  // Hide sidebar if mouse moves far right
+  if (x > 300 && sidebarVisible) {
+    sidebar.classList.add('hidden');
+    sidebarVisible = false;
+  }
+});

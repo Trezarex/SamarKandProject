@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, redirect, send_from_directory
+from flask import Flask, render_template, request, jsonify
 import pandas as pd
 import os
 from dotenv import load_dotenv
@@ -13,242 +13,43 @@ logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
-@app.route("/")
-def root():
-    return render_template('Index.html')
-
-# Dataset paths
+# Data paths
 DATASET_PATHS = {
     "hospital": "data/final_hos_df.csv",
-    "school": "data/final_school_df.csv", 
+    "school": "data/final_school_df.csv",
     "preschool": "data/final_preschool_df.csv"
 }
 
-def load_dataset(key):
-    try:
-        if key not in DATASET_PATHS:
-            logger.warning(f"Unknown dataset key: {key}")
-            return None
-
-        path = DATASET_PATHS[key]
-        if not os.path.exists(path):
-            logger.error(f"Dataset not found: {path}")
-            return None
-
-        return pd.read_csv(path)
-    except Exception as e:
-        logger.error(f"Error loading dataset {key}: {str(e)}")
+def load_data(key):
+    path = DATASET_PATHS.get(key)
+    if not path or not os.path.exists(path):
         return None
+    return pd.read_csv(path)
 
+@app.route("/")
+def home():
+    return render_template("Index.html")
 
-@app.route("/api/hospital-data", methods=["GET"])
-def get_hospital_data():
-    try:
-        df = load_dataset("hospital")
-        if df is None:
-            return jsonify({"error": "Hospital data not found"}), 404
+@app.route("/api/hospital-data")
+def hospital_data():
+    df = load_data("hospital")
+    if df is None:
+        return jsonify({"error": "Hospital data not found"}), 404
+    return jsonify(df.to_dict(orient="records"))
 
-        # Get optional filters
-        region = request.args.get("region", "").strip()
-        district = request.args.get("district", "").strip()
-        hospital_name = request.args.get("hospital_name", "").strip()
+@app.route("/api/school-data")
+def school_data():
+    df = load_data("school")
+    if df is None:
+        return jsonify({"error": "School data not found"}), 404
+    return jsonify(df.to_dict(orient="records"))
 
-        # Apply filters
-        if region:
-            df = df[df["region"].str.lower() == region.lower()]
-        if district:
-            df = df[df["district"].str.lower() == district.lower()]
-        if hospital_name:
-            df = df[df["hospital_name"].str.lower() == hospital_name.lower()]
-
-        # Summary metrics
-        summary = {
-            "total_count": len(df),
-            "avg_satisfaction": round(df["population_score"].mean(), 2),
-            "infrastructure_score": round(df["infrastructure_score"].mean(), 2),
-            "resources_score": round(df["resources_score"].mean(), 2)
-        }
-
-        # Chart data
-        chart_data = {
-            "infra_vs_resources": df[["hospital_name", "district", "infrastructure_score", "resources_score"]].dropna().to_dict(orient="records"),
-            "satisfaction_distribution": df["population_score"].dropna().tolist(),
-            "regional_comparison": df.groupby("region")[["infrastructure_score", "resources_score"]].mean().round(2).reset_index().to_dict(orient="records"),
-            "performance_metrics": {
-                "labels": ["Infrastructure", "Resources", "Population", "Age"],
-                "values": [
-                    round(df["infrastructure_score"].mean(), 2),
-                    round(df["resources_score"].mean(), 2),
-                    round(df["population_score"].mean(), 2),
-                    round(df["age_score"].mean(), 2)
-                ]
-            }
-        }
-
-        return jsonify({"summary": summary, "charts": chart_data})
-
-    except Exception as e:
-        logger.error(f"Error fetching hospital data: {str(e)}")
-        return jsonify({"error": "Failed to process hospital data"}), 500
-    
-
-@app.route("/api/hospital-extended-data", methods=["GET"])
-def get_hospital_extended_data():
-    try:
-        df = load_dataset("hospital")
-        if df is None:
-            return jsonify({"error": "Hospital data not found"}), 404
-
-        # Map points (lat-long + color)
-        map_points = df[[
-            "hospital_name", "region", "district", "latitude", "longitude", "predicted_need_Category"
-        ]].dropna().to_dict(orient="records")
-
-        # Top 5 Overcrowded Hospitals
-        top_overcrowded = df.nlargest(5, "population_score")[[
-            "hospital_name", "region", "district", "population_score"
-        ]].round(2).to_dict(orient="records")
-
-        # High Infra but Low Resources
-        high_infra_low_resource = df[
-            (df["infrastructure_score"] > 0.7) & (df["resources_score"] < 0.4)
-        ][["hospital_name", "region", "district", "infrastructure_score", "resources_score"]].round(2).to_dict(orient="records")
-
-        # Summary KPIs
-        summary_kpis = {
-            "total_hospitals": len(df),
-            "avg_infra": round(df["infrastructure_score"].mean(), 2),
-            "avg_resource": round(df["resources_score"].mean(), 2),
-            "avg_population": round(df["population_score"].mean(), 2),
-            "red_flagged": int((df["predicted_need_Category"].str.upper() == "RED").sum())
-        }
-
-        all_hospitals_table = df[[
-            "hospital_name", "region", "district", "infrastructure_score",
-            "resources_score", "population_score", "predicted_need_Category"
-        ]].round(2).to_dict(orient="records")
-
-        # Generate district zones with dominant category
-        zone_df = df.groupby(["region", "district"]).agg({
-            "latitude": "mean",
-            "longitude": "mean",
-            "predicted_need_Category": lambda x: (x.str.upper().mode()[0] if not x.str.upper().mode().empty else "RED")
-        }).reset_index()
-
-        zones = zone_df.to_dict(orient="records")
-
-        return jsonify({
-            "map_points": map_points,
-            "top_overcrowded": top_overcrowded,
-            "high_infra_low_resource": high_infra_low_resource,
-            "summary_kpis": summary_kpis,
-            "all_hospitals_table": all_hospitals_table,
-            "zones": zones
-        })
-
-    except Exception as e:
-        logger.error(f"Error in hospital extended API: {str(e)}")
-        return jsonify({"error": "Failed to process extended hospital data"}), 500
-
-    
-@app.route("/api/school-data", methods=["GET"])
-def get_school_data():
-    try:
-        df = load_dataset("school")
-        if df is None:
-            return jsonify({"error": "School data not found"}), 404
-
-        # Filters
-        region = request.args.get("region", "").strip()
-        district = request.args.get("district", "").strip()
-        school_name = request.args.get("school_name", "").strip()
-
-        if region:
-            df = df[df["region"].str.lower() == region.lower()]
-        if district:
-            df = df[df["district"].str.lower() == district.lower()]
-        if school_name:
-            df = df[df["school_name"].str.lower() == school_name.lower()]
-
-        # Summary
-        summary = {
-            "total_count": len(df),
-            "avg_satisfaction": round(df["population_score"].mean(), 2),
-            "infrastructure_score": round(df["infrastructure_score"].mean(), 2),
-            "resources_score": round(df["resources_score"].mean(), 2)
-        }
-
-        # Charts
-        chart_data = {
-            "infra_vs_resources": df[["school_name", "district", "infrastructure_score", "resources_score"]].dropna().to_dict(orient="records"),
-            "satisfaction_distribution": df["population_score"].dropna().tolist(),
-            "regional_comparison": df.groupby("region")[["infrastructure_score", "resources_score"]].mean().round(2).reset_index().to_dict(orient="records"),
-            "performance_metrics": {
-                "labels": ["Infrastructure", "Resources", "Population"],
-                "values": [
-                    round(df["infrastructure_score"].mean(), 2),
-                    round(df["resources_score"].mean(), 2),
-                    round(df["population_score"].mean(), 2)
-                ]
-            }
-        }
-
-        return jsonify({"summary": summary, "charts": chart_data})
-
-    except Exception as e:
-        logger.error(f"Error fetching school data: {str(e)}")
-        return jsonify({"error": "Failed to process school data"}), 500
-
-
-@app.route("/api/preschool-data", methods=["GET"])
-def get_preschool_data():
-    try:
-        df = load_dataset("preschool")
-        if df is None:
-            return jsonify({"error": "Preschool data not found"}), 404
-
-        # Optional filters
-        region = request.args.get("region", "").strip()
-        district = request.args.get("district", "").strip()
-        preschool_name = request.args.get("preschool_name", "").strip()
-
-        if region:
-            df = df[df["region"].str.lower() == region.lower()]
-        if district:
-            df = df[df["district"].str.lower() == district.lower()]
-        if preschool_name:
-            df = df[df["preschool_name"].str.lower() == preschool_name.lower()]
-
-        # Summary
-        summary = {
-            "total_count": len(df),
-            "avg_satisfaction": round(df["population_score"].mean(), 2),
-            "infrastructure_score": round(df["infrastructure_score"].mean(), 2),
-            "resources_score": round(df["resources_score"].mean(), 2)
-        }
-
-        # Charts
-        chart_data = {
-            "infra_vs_resources": df[["kindergarten_name", "district", "infrastructure_score", "resources_score"]].dropna().to_dict(orient="records"),
-            "satisfaction_distribution": df["population_score"].dropna().tolist(),
-            "regional_comparison": df.groupby("region")[["infrastructure_score", "resources_score"]].mean().round(2).reset_index().to_dict(orient="records"),
-            "performance_metrics": {
-                "labels": ["Infrastructure", "Resources", "Population", "Age"],
-                "values": [
-                    round(df["infrastructure_score"].mean(), 2),
-                    round(df["resources_score"].mean(), 2),
-                    round(df["population_score"].mean(), 2),
-                    round(df["age_score"].mean(), 2) if "age_score" in df.columns else None
-                ]
-            }
-        }
-
-        return jsonify({"summary": summary, "charts": chart_data})
-
-    except Exception as e:
-        logger.error(f"Error fetching preschool data: {str(e)}")
-        return jsonify({"error": "Failed to process preschool data"}), 500
-
+@app.route("/api/preschool-data")
+def preschool_data():
+    df = load_data("preschool")
+    if df is None:
+        return jsonify({"error": "Preschool data not found"}), 404
+    return jsonify(df.to_dict(orient="records"))
 
 
 @app.route("/chat", methods=["POST"])
@@ -265,7 +66,7 @@ def chat():
         logger.info(f"Chat request: {user_message}")
         
         # Load hospital data for contex
-        hospital_df = load_dataset("hospital")
+        hospital_df = load_data("hospital")
         if hospital_df is None:
             return jsonify({'reply': 'Sorry, I cannot access the data right now.'}), 500
             
