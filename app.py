@@ -15,7 +15,6 @@ app = Flask(__name__)
 
 @app.route("/")
 def root():
-    """Serve the main dashboard page"""
     return render_template('Index.html')
 
 # Dataset paths
@@ -26,7 +25,6 @@ DATASET_PATHS = {
 }
 
 def load_dataset(key):
-    """Load dataset from CSV by key ('hospital', 'school', 'preschool')"""
     try:
         if key not in DATASET_PATHS:
             logger.warning(f"Unknown dataset key: {key}")
@@ -92,6 +90,66 @@ def get_hospital_data():
     except Exception as e:
         logger.error(f"Error fetching hospital data: {str(e)}")
         return jsonify({"error": "Failed to process hospital data"}), 500
+    
+
+@app.route("/api/hospital-extended-data", methods=["GET"])
+def get_hospital_extended_data():
+    try:
+        df = load_dataset("hospital")
+        if df is None:
+            return jsonify({"error": "Hospital data not found"}), 404
+
+        # Map points (lat-long + color)
+        map_points = df[[
+            "hospital_name", "region", "district", "latitude", "longitude", "predicted_need_Category"
+        ]].dropna().to_dict(orient="records")
+
+        # Top 5 Overcrowded Hospitals
+        top_overcrowded = df.nlargest(5, "population_score")[[
+            "hospital_name", "region", "district", "population_score"
+        ]].round(2).to_dict(orient="records")
+
+        # High Infra but Low Resources
+        high_infra_low_resource = df[
+            (df["infrastructure_score"] > 0.7) & (df["resources_score"] < 0.4)
+        ][["hospital_name", "region", "district", "infrastructure_score", "resources_score"]].round(2).to_dict(orient="records")
+
+        # Summary KPIs
+        summary_kpis = {
+            "total_hospitals": len(df),
+            "avg_infra": round(df["infrastructure_score"].mean(), 2),
+            "avg_resource": round(df["resources_score"].mean(), 2),
+            "avg_population": round(df["population_score"].mean(), 2),
+            "red_flagged": int((df["predicted_need_Category"].str.upper() == "RED").sum())
+        }
+
+        all_hospitals_table = df[[
+            "hospital_name", "region", "district", "infrastructure_score",
+            "resources_score", "population_score", "predicted_need_Category"
+        ]].round(2).to_dict(orient="records")
+
+        # Generate district zones with dominant category
+        zone_df = df.groupby(["region", "district"]).agg({
+            "latitude": "mean",
+            "longitude": "mean",
+            "predicted_need_Category": lambda x: (x.str.upper().mode()[0] if not x.str.upper().mode().empty else "RED")
+        }).reset_index()
+
+        zones = zone_df.to_dict(orient="records")
+
+        return jsonify({
+            "map_points": map_points,
+            "top_overcrowded": top_overcrowded,
+            "high_infra_low_resource": high_infra_low_resource,
+            "summary_kpis": summary_kpis,
+            "all_hospitals_table": all_hospitals_table,
+            "zones": zones
+        })
+
+    except Exception as e:
+        logger.error(f"Error in hospital extended API: {str(e)}")
+        return jsonify({"error": "Failed to process extended hospital data"}), 500
+
     
 @app.route("/api/school-data", methods=["GET"])
 def get_school_data():
@@ -195,7 +253,6 @@ def get_preschool_data():
 
 @app.route("/chat", methods=["POST"])
 def chat():
-    """Chatbot endpoint"""
     try:
         data = request.get_json()
         if not data or 'message' not in data:
@@ -226,7 +283,6 @@ def chat():
         return jsonify({'reply': 'Sorry, I encountered an error processing your request.'}), 500
 
 def prepare_data_context(df):
-    """Prepare data context for AI chatbot"""
     try:
         if df is None or df.empty:
             return "No data available."
@@ -250,15 +306,15 @@ def prepare_data_context(df):
                 }
         
         context = f"""
-Dataset Information:
-- Total records: {total_records}
-- Columns: {', '.join(columns)}
+            Dataset Information:
+            - Total records: {total_records}
+            - Columns: {', '.join(columns)}
 
-Sample Data:
-{sample_data}
+            Sample Data:
+            {sample_data}
 
-Key Statistics:
-"""
+            Key Statistics:
+            """
         for col, stat in stats.items():
             context += f"- {col}: avg={stat['mean']:.2f}, min={stat['min']:.2f}, max={stat['max']:.2f}\n"
             
@@ -269,7 +325,6 @@ Key Statistics:
         return "Data context unavailable."
 
 def get_ai_response(user_message, context):
-    """Get AI response using OpenRouter API"""
     try:
         from openai import OpenAI
         
@@ -284,12 +339,12 @@ def get_ai_response(user_message, context):
         )
         
         system_prompt = f"""You are a helpful data analyst assistant for the Samarkand healthcare dashboard. 
-You have access to hospital data from the Samarkand region. 
+            You have access to hospital data from the Samarkand region. 
 
-{context}
+            {context}
 
-Please provide helpful, accurate responses about the data. If asked about specific metrics, 
-refer to the data context provided. Keep responses concise and informative."""
+            Please provide helpful, accurate responses about the data. If asked about specific metrics, 
+            refer to the data context provided. Keep responses concise and informative."""
 
         messages = [
             {"role": "system", "content": system_prompt},
@@ -311,7 +366,6 @@ refer to the data context provided. Keep responses concise and informative."""
         return generate_fallback_response(user_message, context)
 
 def generate_fallback_response(user_message, context):
-    """Generate a fallback response when AI is unavailable"""
     message_lower = user_message.lower()
     
     if any(word in message_lower for word in ['average', 'mean', 'satisfaction']):
@@ -329,22 +383,5 @@ def generate_fallback_response(user_message, context):
     else:
         return "I can help you analyze the Samarkand hospital data. Try asking about satisfaction scores, regional comparisons, infrastructure quality, or resource availability."
 
-@app.errorhandler(404)
-def not_found(error):
-    return send_from_directory('.', 'index.html')
-
-@app.errorhandler(500)
-def internal_error(error):
-    logger.error(f"Internal server error: {str(error)}")
-    return jsonify({"error": "Internal server error"}), 500
-
 if __name__ == "__main__":
-    print('=== Samarkand Dashboard Server ===')
-    print('Registered routes:')
-    for rule in app.url_map.iter_rules():
-        print(f"  {rule.rule} -> {rule.endpoint}")
-    
-    print(f"\nStarting server on http://0.0.0.0:8000")
-    print("Dashboard will be available at: http://localhost:8000")
-    
     app.run(host='0.0.0.0', port=8000, debug=True)

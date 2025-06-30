@@ -1,14 +1,24 @@
 
 // Unified navigation function for showing/hiding sections and dashboards
 function showSection(sectionId) {
-    // Hide all content sections
-    const sections = document.querySelectorAll('.content-section');
-    sections.forEach(section => {
-        section.classList.remove('active');
-    });
-    // Show the selected section
-    const activeSection = document.getElementById(sectionId);
-    if (activeSection) activeSection.classList.add('active');
+  // Hide all content sections
+  const sections = document.querySelectorAll('.content-section');
+  sections.forEach(section => {
+    section.classList.remove('active');
+  });
+  // Show the selected section
+  const activeSection = document.getElementById(sectionId);
+  if (activeSection) {
+    activeSection.classList.add('active');
+
+    // ✅ Fix Leaflet map not rendering immediately
+    if (sectionId === "hospital-dashboard" && window.hospitalMapInstance) {
+      setTimeout(() => {
+        window.hospitalMapInstance.invalidateSize();
+      }, 300);
+    }
+  }
+
 }
 document.addEventListener("DOMContentLoaded", () => {
   loadHospitalDashboardData();
@@ -187,6 +197,98 @@ function renderPerformanceMetrics(data) {
     }
   });
 }
+
+function fetchHospitalExtendedData() {
+  fetch("/api/hospital-extended-data")
+    .then(res => res.json())
+    .then(data => {
+      updateKPIcards(data.summary_kpis);
+      renderHospitalMap(data.map_points, data.zones);
+      renderInsightTable("topOvercrowdedTable", data.top_overcrowded);
+      renderInsightTable("infraResourceMismatchTable", data.high_infra_low_resource);
+    })
+    .catch(err => console.error("Extended hospital data error:", err));
+}
+
+function updateKPIcards(kpis) {
+  document.getElementById("kpiTotalHospitals").textContent = `Total Hospitals: ${kpis.total_hospitals}`;
+  document.getElementById("kpiRedFlagged").textContent = `🚨 RED Flagged: ${kpis.red_flagged}`;
+  document.getElementById("kpiAvgInfra").textContent = `Infra Score (avg): ${kpis.avg_infra}`;
+  document.getElementById("kpiAvgResource").textContent = `Resources Score (avg): ${kpis.avg_resource}`;
+  document.getElementById("kpiAvgPopulation").textContent = `Population Score (avg): ${kpis.avg_population}`;
+}
+
+function renderInsightTable(tableId, rows) {
+  const table = document.getElementById(tableId);
+  if (!rows || rows.length === 0) {
+    table.innerHTML = "<tr><td>No data available</td></tr>";
+    return;
+  }
+  const headers = Object.keys(rows[0]);
+  const thead = `<thead><tr>${headers.map(h => `<th>${h}</th>`).join("")}</tr></thead>`;
+  const tbody = `<tbody>${rows.map(row => `
+    <tr>${headers.map(h => `<td>${row[h]}</td>`).join("")}</tr>
+  `).join("")}</tbody>`;
+  table.innerHTML = thead + tbody;
+}
+
+function renderHospitalMap(points, zones) {
+  // Remove existing map if it exists
+  if (window.hospitalMapInstance) {
+    window.hospitalMapInstance.remove();
+  }
+
+  // Create new map instance
+  const map = L.map("hospitalMap").setView([39.8, 66.8], 8);
+  window.hospitalMapInstance = map;
+
+  // Add tile layer
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution: '&copy; OpenStreetMap contributors'
+  }).addTo(map);
+
+  // Unified color logic
+  const getColorByCategory = (cat) => {
+    const category = (cat || "").toUpperCase();
+    if (category === "GREEN") return "#228B22"; // forest green
+    if (category === "YELLOW") return "#FFD700"; // gold yellow
+    return "#B22222"; // firebrick red
+  };
+
+  // ✅ Draw zone circles around hospitals
+  points.forEach(p => {
+    const color = getColorByCategory(p.predicted_need_Category);
+    const circle = L.circle([p.latitude, p.longitude], {
+      radius: 8000,
+      color: color,
+      fillColor: color,
+      fillOpacity: 0.01,
+      weight: 0.8
+    }).addTo(map);
+
+    circle.bindPopup(`<b>${p.hospital_name}</b><br>${p.region}, ${p.district}<br>Need: ${p.predicted_need_Category}`);
+  });
+
+  // ✅ Add colored circle markers for hospitals
+  points.forEach(p => {
+    const color = getColorByCategory(p.predicted_need_Category);
+    const marker = L.circleMarker([p.latitude, p.longitude], {
+      radius: 6,
+      fillColor: color,
+      color: "#fff",
+      weight: 1,
+      opacity: 1,
+      fillOpacity: 0.9
+    }).addTo(map);
+
+    marker.bindPopup(`<b>${p.hospital_name}</b><br>${p.region}, ${p.district}<br>Need: ${p.predicted_need_Category}`);
+  });
+}
+
+
+
+fetchHospitalExtendedData(); // function for extended insights
+
 
 // =======================
 // Filters Trigger Fetch

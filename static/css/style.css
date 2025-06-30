@@ -854,3 +854,45 @@ body {
     margin: 20px 0;
     border: 1px solid #fcc;
 }
+
+.enhanced-kpis {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin: 20px 0;
+}
+
+.kpi-card {
+    background: #1a1a2e;
+    color: #ffffff;
+    padding: 16px;
+    border-radius: 12px;
+    font-weight: 500;
+    text-align: center;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.insight-tables {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.insight-block {
+    background: #16213e;
+    padding: 16px;
+    border-radius: 12px;
+}
+
+.insight-block table {
+    width: 100%;
+    border-collapse: collapse;
+    color: #ffffff;
+}
+
+.insight-block th,
+.insight-block td {
+    padding: 8px;
+    border-bottom: 1px solid #333;
+    text-align: left;
+}

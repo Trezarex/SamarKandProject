@@ -7,6 +7,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+
   <script defer src="{{ url_for('static', filename='js/script.js') }}"></script>
   <script defer src="{{ url_for('static', filename='js/school.js') }}"></script>
   <script defer src="{{ url_for('static', filename='js/preschool.js') }}"></script>
@@ -117,9 +120,10 @@
 <body>
   <!-- Sidebar -->
   <div class="nav-sidebar">
-    <div class="nav-header" style="display: flex; align-items: center;">
+    <div class="nav-header" style="display: flex; align-items: center; cursor: pointer;" onclick="window.location.reload();">
       <h2 style="margin: 0;">Samarkand Dashboard</h2>
-      <img id="samarkandLogo" src="{{ url_for('static', filename='images/flag.svg') }}" alt="Samarkand Logo" style="height: 65px; width: auto; vertical-align: middle;" />
+      <img id="samarkandLogo" src="{{ url_for('static', filename='images/flag.svg') }}" alt="Samarkand Logo"
+        style="height: 65px; width: auto; vertical-align: middle;" />
     </div>
     <div class="nav-menu">
       <button class="nav-item active" onclick="showSection('homepage')">🏠 Homepage</button>
@@ -131,11 +135,14 @@
           <span class="sidebar-icon">📊</span> Dashboard <span class="sidebar-caret" id="dashboardCaret">▼</span>
         </button>
         <div class="sidebar-dropdown-menu" id="dashboardDropdown" style="display:none;">
-          <button class="sidebar-dropdown-item" onclick="showSection('hospital-dashboard')"><span class="sidebar-bullet">></span>
+          <button class="sidebar-dropdown-item" onclick="showSection('hospital-dashboard')"><span
+              class="sidebar-bullet">></span>
             Hospital Dashboard</button>
-          <button class="sidebar-dropdown-item" onclick="showSection('school-dashboard')"><span class="sidebar-bullet">></span>
+          <button class="sidebar-dropdown-item" onclick="showSection('school-dashboard')"><span
+              class="sidebar-bullet">></span>
             School Dashboard</button>
-          <button class="sidebar-dropdown-item" onclick="showSection('preschool-dashboard')"><span class="sidebar-bullet">></span>
+          <button class="sidebar-dropdown-item" onclick="showSection('preschool-dashboard')"><span
+              class="sidebar-bullet">></span>
             Preschool Dashboard</button>
         </div>
       </div>
@@ -232,6 +239,14 @@
           </div>
         </section>
 
+
+        <!-- Map Section -->
+        <section>
+          <h2 style="color: black;">📍 Hospital Map by Need Category</h2>
+          <div id="hospitalMap" style="height: 400px; border-radius: 12px; margin-bottom: 20px;"></div>
+        </section>
+
+
         <!-- Charts -->
         <section class="charts-grid">
           <div class="chart-box">
@@ -249,6 +264,28 @@
           <div class="chart-box">
             <h2>Performance Metrics</h2>
             <canvas id="hospitalPerformanceChart"></canvas>
+          </div>
+        </section>
+
+
+        <!-- Enhanced KPIs -->
+        <section class="enhanced-kpis">
+          <div class="kpi-card" id="kpiTotalHospitals">Total Hospitals: -</div>
+          <div class="kpi-card" id="kpiRedFlagged">🚨 RED Flagged: -</div>
+          <div class="kpi-card" id="kpiAvgInfra">Infra Score (avg): -</div>
+          <div class="kpi-card" id="kpiAvgResource">Resources Score (avg): -</div>
+          <div class="kpi-card" id="kpiAvgPopulation">Population Score (avg): -</div>
+        </section>
+
+        <!-- Insights Tables -->
+        <section class="insight-tables">
+          <div class="insight-block">
+            <h3 style="color: white;">Top 5 Overcrowded Hospitals</h3>
+            <table id="topOvercrowdedTable"></table>
+          </div>
+          <div class="insight-block">
+            <h3 style="color: white;">High Infra, Low Resource Hospitals</h3>
+            <table id="infraResourceMismatchTable"></table>
           </div>
         </section>
 
