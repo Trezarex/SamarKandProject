@@ -17,8 +17,10 @@
   <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
 
   <script defer src="{{ url_for('static', filename='js/script.js') }}"></script>
+  <script defer src="{{ url_for('static', filename='js/hospital.js') }}"></script>
   <script defer src="{{ url_for('static', filename='js/school.js') }}"></script>
   <script defer src="{{ url_for('static', filename='js/preschool.js') }}"></script>
+  <script defer src="{{ url_for('static', filename='js/chatBot.js') }}"></script>
 
   <style>
     /* Sidebar Dropdown Styling - homepage/chatbot theme */
@@ -128,7 +130,7 @@
   <div class="nav-sidebar">
     <div class="nav-header" style="display: flex; align-items: center; cursor: pointer;"
       onclick="window.location.reload();">
-      <h2 style="margin: 0;">Samarkand Dashboard</h2>
+      <h2 style="margin: 0; width: 7em;">Samarkand Dashboard</h2>
       <img id="samarkandLogo" src="{{ url_for('static', filename='images/flag.svg') }}" alt="Samarkand Logo"
         style="height: 65px; width: auto; vertical-align: middle;" />
     </div>

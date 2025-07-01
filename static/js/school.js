@@ -1,9 +1,3 @@
-// Add this code to your script.js after the hospital dashboard code
-
-// ========================
-// SCHOOL DASHBOARD CODE
-// ========================
-
 // Global variables for school data
 let schoolData = [];
 let schoolInfrastructureData = [];

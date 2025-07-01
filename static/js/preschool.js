@@ -1,7 +1,3 @@
-// ========================
-// PRESCHOOL DASHBOARD CODE
-// ========================
-
 // Global variables for preschool data
 let preSchoolData = [];
 let preSchoolInfrastructureData = [];
