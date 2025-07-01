@@ -239,10 +239,13 @@
           <div id="hospitalMap" style="height: 500px; width: 100%; border-radius: 12px;"></div>
         </div>
 
+        <!-- Replace the charts-row section with this -->
         <div class="charts-row">
           <div class="chart-box">
             <h2>Infrastructure Score Distribution</h2>
-            <canvas id="infraDonutChart" height="300"></canvas>
+            <div class="chart-container">
+              <canvas id="infraDonutChart"></canvas>
+            </div>
           </div>
           <div class="chart-box">
             <h2>Population Score Distribution</h2>
@@ -258,6 +261,72 @@
           </div>
         </div>
 
+        <!-- Add after the charts-row section -->
+        <div class="tables-container">
+          <div class="tables-row">
+            <!-- Population Table -->
+            <div class="table-box">
+              <h2>Population & Capacity Metrics</h2>
+              <div class="table-container">
+                <table id="populationTable">
+                  <thead>
+                    <tr>
+                      <th>Hospital</th>
+                      <th>Medical Staff</th>
+                      <th>Bed Capacity</th>
+                      <th>Total Staff</th>
+                      <th>Population Score</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Infrastructure Table -->
+            <div class="table-box">
+              <h2>Infrastructure Metrics</h2>
+              <div class="table-container">
+                <table id="infrastructureTable">
+                  <thead>
+                    <tr>
+                      <th>Hospital</th>
+                      <th>Building Count</th>
+                      <th>Earthquake Safe</th>
+                      <th>Wall Condition</th>
+                      <th>Infra Score</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Resources Table (Full width) -->
+          <div class="tables-row">
+            <div class="table-box full-width">
+              <h2>Resource Availability Metrics</h2>
+              <div class="table-container">
+                <table id="resourcesTable">
+                  <thead>
+                    <tr>
+                      <th>Hospital</th>
+                      <th>Electricity</th>
+                      <th>Water Supply</th>
+                      <th>Heating</th>
+                      <th>Internet</th>
+                      <th>Sanitation</th>
+                      <th>Security</th>
+                      <th>Resources Score</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 

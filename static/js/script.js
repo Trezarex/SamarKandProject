@@ -18,6 +18,27 @@ document.addEventListener('mousemove', (e) => {
   }
 });
 
+// Global variable to hold hospital data
+let hospitalData = [];
+let infrastructureData = [];
+let populationData = [];
+let resourcesData = [];
+let districtChoices;
+let hospitalChoices;
+let filteredHospitalData = [];
+
+// DONUT CHARTS
+let infraDonutChart = null;
+let populationDonutChart = null;
+let resourcesDonutChart = null;
+let infraDonutObserver = null;
+let populationDonutObserver = null;
+let resourcesDonutObserver = null;
+
+// MAP
+let hospitalMapInstance;
+let mapMarkers = [];
+
 function showSection(sectionId) {
   const sections = document.querySelectorAll('.content-section');
   sections.forEach(section => section.classList.remove('active'));
@@ -27,42 +48,37 @@ function showSection(sectionId) {
     activeSection.classList.add('active');
 
     if (sectionId === "hospital-dashboard") {
-      // ⏳ Wait until section is visible, then init and resize map
       setTimeout(() => {
+        // Handle map
         if (!window.hospitalMapInstance) {
-          initHospitalMap(); // Only initialize once
+          initHospitalMap();
         } else {
           hospitalMapInstance.invalidateSize();
         }
+
+        // Handle charts
+        if (infraDonutChart) infraDonutChart.update();
+        if (populationDonutChart) populationDonutChart.update();
+        if (resourcesDonutChart) resourcesDonutChart.update();
       }, 300);
     }
   }
 }
 
-document.addEventListener("DOMContentLoaded", async () => {
-  await loadHospitalData(); // 🟢 Wait for hospital data to load before drawing charts
-  updateInfraDonutChart(hospitalData);
-  updatePopulationDonutChart(hospitalData);
-  updateResourcesDonutChart(hospitalData);
-
-  loadPreschoolData();      // These can run independently
-  loadSchoolData();
-  initHospitalMap();        // Initialize map after data is ready
+document.addEventListener("DOMContentLoaded", () => {
+  loadHospitalData();
+  // These would be defined in other files
+  // loadPreschoolData();
+  // loadSchoolData();
+  initHospitalMap();
 });
 
-
-// Global variable to hold hospital data
-let hospitalData = [];
-let infrastructureData = [];
-let populationData = [];
-let resourcesData = [];
-let districtChoices;
-let hospitalChoices;
-let infraDonutChart = null;
-let populationDonutChart = null;
-let resourcesDonutChart = null;
-
-
+// Helper function to determine category based on score
+function getCategoryForScore(score) {
+  if (score >= 0.7) return 'GREEN';
+  if (score >= 0.4) return 'YELLOW';
+  return 'RED';
+}
 
 // Main function to load hospital data from backend
 async function loadHospitalData() {
@@ -77,6 +93,7 @@ async function loadHospitalData() {
 
     hospitalData = data;
 
+    // Process data subsets
     infrastructureData = hospitalData.map(h => ({
       hospital_name: h.hospital_name,
       outside_branches: h.outside_branches,
@@ -93,16 +110,17 @@ async function loadHospitalData() {
       door_condition: h.door_condition,
       earthquake_safe: h.earthquake_safe,
       age_score: h.age_score,
-      infrastructure_score: h.infrastructure_score
+      infrastructure_score: h.infrastructure_score,
+      need_category: h.need_category
     }));
-
 
     populationData = hospitalData.map(h => ({
       hospital_name: h.hospital_name,
       medical_staff: h.medical_staff,
       bed_capacity: h.bed_capacity,
       population_score: h.population_score,
-      total_staff: h.total_staff
+      total_staff: h.total_staff,
+      need_category: h.need_category
     }));
 
     resourcesData = hospitalData.map(h => ({
@@ -134,12 +152,22 @@ async function loadHospitalData() {
       is_warm_in_winter: h.is_warm_in_winter,
       has_water_pipeline: h.has_water_pipeline,
       satisfaction: h.satisfaction,
-      resources_score: h.resources_score
+      resources_score: h.resources_score,
+      need_category: h.need_category
     }));
+
     populateHospitalFilters();
-    // summary cards for full dataset by default
     updateHospitalSummaryCards(hospitalData);
     applyHospitalFilters();
+
+    // Initialize charts after data is loaded
+    updateInfraDonutChart(infrastructureData);
+    updatePopulationDonutChart(populationData);
+    updateResourcesDonutChart(resourcesData);
+
+    updatePopulationTable(hospitalData);
+    updateInfrastructureTable(hospitalData);
+    updateResourcesTable(hospitalData);
 
   } catch (error) {
     console.error("❌ Fetch failed:", error);
@@ -178,10 +206,9 @@ function populateHospitalFilters() {
     'value', 'label', true
   );
 
-  // 🧠 Update hospitals dynamically when districts change
+  // Update hospitals dynamically when districts change
   document.querySelector("#hospitalDistrictFilter").addEventListener("change", () => {
-    const selectedDistricts = districtChoices.getValue(true); // array of selected districts
-
+    const selectedDistricts = districtChoices.getValue(true);
     const filteredHospitals = hospitalData
       .filter(h => selectedDistricts.length === 0 || selectedDistricts.includes(h.district))
       .map(h => h.hospital_name);
@@ -196,115 +223,35 @@ function populateHospitalFilters() {
   });
 }
 
-function updateInfraDonutChart(data) {
-  updateDonutChart(data, 'infraDonutChart', 'infrastructure_score');
-}
-
-function updatePopulationDonutChart(data) {
-  updateDonutChart(data, 'populationDonutChart', 'population_score');
-}
-
-function updateResourcesDonutChart(data) {
-  updateDonutChart(data, 'resourcesDonutChart', 'resources_score');
-}
-
-function updateDonutChart(data, canvasId, scoreKey) {
-  const ctx = document.getElementById(canvasId)?.getContext('2d');
-  if (!ctx) return;
-
-  const categories = {
-    'Excellent (0.8-1.0)': 0,
-    'Good (0.6-0.79)': 0,
-    'Average (0.4-0.59)': 0,
-    'Poor (0.2-0.39)': 0,
-    'Critical (0-0.19)': 0
-  };
-
-  data.forEach(hospital => {
-    const score = parseFloat(hospital[scoreKey]) || 0;
-    if (score >= 0.8) categories['Excellent (0.8-1.0)']++;
-    else if (score >= 0.6) categories['Good (0.6-0.79)']++;
-    else if (score >= 0.4) categories['Average (0.4-0.59)']++;
-    else if (score >= 0.2) categories['Poor (0.2-0.39)']++;
-    else categories['Critical (0-0.19)']++;
-  });
-
-  const labels = Object.keys(categories);
-  const values = Object.values(categories);
-  const total = values.reduce((a, b) => a + b, 0);
-
-  const backgroundColors = [
-    'rgba(40, 167, 69, 0.7)',
-    'rgba(0, 123, 255, 0.7)',
-    'rgba(255, 193, 7, 0.7)',
-    'rgba(255, 152, 0, 0.7)',
-    'rgba(220, 53, 69, 0.7)'
-  ];
-
-  const chartMap = {
-    'infraDonutChart': infraDonutChart,
-    'populationDonutChart': populationDonutChart,
-    'resourcesDonutChart': resourcesDonutChart
-  };
-
-  // Destroy if exists
-  if (chartMap[canvasId]) chartMap[canvasId].destroy();
-
-  const chart = new Chart(ctx, {
-    type: 'doughnut',
-    data: {
-      labels,
-      datasets: [{
-        data: values,
-        backgroundColor: backgroundColors,
-        borderWidth: 1
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      cutout: '65%',
-      plugins: {
-        legend: { position: 'right' },
-        tooltip: {
-          callbacks: {
-            label: context => {
-              const label = context.label || '';
-              const value = context.raw || 0;
-              const percentage = Math.round((value / total) * 100);
-              return `${label}: ${value} (${percentage}%)`;
-            }
-          }
-        }
-      }
-    }
-  });
-
-  if (canvasId === 'infraDonutChart') infraDonutChart = chart;
-  if (canvasId === 'populationDonutChart') populationDonutChart = chart;
-  if (canvasId === 'resourcesDonutChart') resourcesDonutChart = chart;
-}
-
-
-let filteredHospitalData = [];
-
 function applyHospitalFilters() {
-  const selectedDistricts = districtChoices.getValue(true); // array of selected district values
-  const selectedHospitals = hospitalChoices.getValue(true); // array of selected hospital names
+  const selectedDistricts = districtChoices.getValue(true);
+  const selectedHospitals = hospitalChoices.getValue(true);
 
-  // Filter hospitalData based on both
   filteredHospitalData = hospitalData.filter(h => {
     const districtMatch = selectedDistricts.length === 0 || selectedDistricts.includes(h.district);
     const hospitalMatch = selectedHospitals.length === 0 || selectedHospitals.includes(h.hospital_name);
     return districtMatch && hospitalMatch;
   });
+
+  const filteredInfra = infrastructureData.filter(item =>
+    filteredHospitalData.some(h => h.hospital_name === item.hospital_name));
+  const filteredPopulation = populationData.filter(item =>
+    filteredHospitalData.some(h => h.hospital_name === item.hospital_name));
+  const filteredResources = resourcesData.filter(item =>
+    filteredHospitalData.some(h => h.hospital_name === item.hospital_name));
+
+  // Update all components
   updateHospitalSummaryCards(filteredHospitalData);
   updateHospitalMap(filteredHospitalData);
-  updateInfraDonutChart(filteredHospitalData);
-  updatePopulationDonutChart(filteredHospitalData);
-  updateResourcesDonutChart(filteredHospitalData);
-}
 
+  updateInfraDonutChart(filteredInfra);
+  updatePopulationDonutChart(filteredPopulation);
+  updateResourcesDonutChart(filteredResources);
+
+  updatePopulationTable(filteredPopulation);
+  updateInfrastructureTable(filteredInfra);
+  updateResourcesTable(filteredResources);
+}
 
 function updateHospitalSummaryCards(data) {
   // Handle no data case
@@ -317,7 +264,6 @@ function updateHospitalSummaryCards(data) {
   }
 
   const total = data.length;
-
   const avgPopulationScore = average(data.map(d => d.population_score));
   const avgInfra = average(data.map(d => d.infrastructure_score));
   const avgResources = average(data.map(d => d.resources_score));
@@ -335,8 +281,267 @@ function average(arr) {
   return valid.reduce((sum, val) => sum + val, 0) / valid.length;
 }
 
+// DONUT CHART FUNCTIONS
+function updateInfraDonutChart(infraData) {
+  const ctx = document.getElementById('infraDonutChart')?.getContext('2d');
+  if (!ctx) return;
 
-let hospitalMapInstance;
+  // Clean up previous observer
+  if (infraDonutObserver) {
+    infraDonutObserver.disconnect();
+    infraDonutObserver = null;
+  }
+
+  // Count hospitals by infrastructure score category
+  const categories = {
+    'RED': 0,
+    'YELLOW': 0,
+    'GREEN': 0
+  };
+
+  infraData.forEach(hospital => {
+    const category = getCategoryForScore(hospital.infrastructure_score);
+    categories[category]++;
+  });
+
+  const labels = Object.keys(categories);
+  const data = Object.values(categories);
+  const total = data.reduce((a, b) => a + b, 0);
+
+  if (infraDonutChart) infraDonutChart.destroy();
+
+  infraDonutChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: labels,
+      datasets: [{
+        data: data,
+        backgroundColor: [
+          'rgba(220, 53, 69, 0.7)',  // RED
+          'rgba(255, 193, 7, 0.7)',   // YELLOW
+          'rgba(40, 167, 69, 0.7)'    // GREEN
+        ],
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'right',
+          labels: {
+            font: {
+              size: 11
+            },
+            boxWidth: 12,
+            padding: 12
+          }
+        },
+        tooltip: {
+          callbacks: {
+            label: (context) => {
+              const value = context.raw || 0;
+              const percentage = Math.round((value / total) * 100);
+              return `${context.label}: ${value} (${percentage}%)`;
+            }
+          }
+        },
+        title: {
+          display: true,
+          text: 'Infrastructure Need Distribution',
+          font: {
+            size: 14
+          }
+        }
+      },
+      cutout: '65%',
+      devicePixelRatio: window.devicePixelRatio || 1
+    }
+  });
+
+  const container = ctx.canvas.parentElement;
+  if (container) {
+    infraDonutObserver = new ResizeObserver(() => {
+      infraDonutChart.resize();
+    });
+    infraDonutObserver.observe(container);
+  }
+}
+
+function updatePopulationDonutChart(populationData) {
+  const ctx = document.getElementById('populationDonutChart')?.getContext('2d');
+  if (!ctx) return;
+
+  // Clean up previous observer
+  if (populationDonutObserver) {
+    populationDonutObserver.disconnect();
+    populationDonutObserver = null;
+  }
+
+  // Count hospitals by population score category
+  const categories = {
+    'RED': 0,
+    'YELLOW': 0,
+    'GREEN': 0
+  };
+
+  populationData.forEach(hospital => {
+    const category = getCategoryForScore(hospital.population_score);
+    categories[category]++;
+  });
+
+  const labels = Object.keys(categories);
+  const data = Object.values(categories);
+  const total = data.reduce((a, b) => a + b, 0);
+
+  if (populationDonutChart) populationDonutChart.destroy();
+
+  populationDonutChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: labels,
+      datasets: [{
+        data: data,
+        backgroundColor: [
+          'rgba(220, 53, 69, 0.7)',  // RED
+          'rgba(255, 193, 7, 0.7)',   // YELLOW
+          'rgba(40, 167, 69, 0.7)'    // GREEN
+        ],
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'right',
+          labels: {
+            font: {
+              size: 11
+            },
+            boxWidth: 12,
+            padding: 12
+          }
+        },
+        tooltip: {
+          callbacks: {
+            label: (context) => {
+              const value = context.raw || 0;
+              const percentage = Math.round((value / total) * 100);
+              return `${context.label}: ${value} (${percentage}%)`;
+            }
+          }
+        },
+        title: {
+          display: true,
+          text: 'Population Need Distribution',
+          font: {
+            size: 14
+          }
+        }
+      },
+      cutout: '65%',
+      devicePixelRatio: window.devicePixelRatio || 1
+    }
+  });
+
+  const container = ctx.canvas.parentElement;
+  if (container) {
+    populationDonutObserver = new ResizeObserver(() => {
+      populationDonutChart.resize();
+    });
+    populationDonutObserver.observe(container);
+  }
+}
+
+function updateResourcesDonutChart(resourcesData) {
+  const ctx = document.getElementById('resourcesDonutChart')?.getContext('2d');
+  if (!ctx) return;
+
+  // Clean up previous observer
+  if (resourcesDonutObserver) {
+    resourcesDonutObserver.disconnect();
+    resourcesDonutObserver = null;
+  }
+
+  // Count hospitals by resources score category
+  const categories = {
+    'RED': 0,
+    'YELLOW': 0,
+    'GREEN': 0
+  };
+
+  resourcesData.forEach(hospital => {
+    const category = getCategoryForScore(hospital.resources_score);
+    categories[category]++;
+  });
+
+  const labels = Object.keys(categories);
+  const data = Object.values(categories);
+  const total = data.reduce((a, b) => a + b, 0);
+
+  if (resourcesDonutChart) resourcesDonutChart.destroy();
+
+  resourcesDonutChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: labels,
+      datasets: [{
+        data: data,
+        backgroundColor: [
+          'rgba(220, 53, 69, 0.7)',  // RED
+          'rgba(255, 193, 7, 0.7)',   // YELLOW
+          'rgba(40, 167, 69, 0.7)'    // GREEN
+        ],
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'right',
+          labels: {
+            font: {
+              size: 11
+            },
+            boxWidth: 12,
+            padding: 12
+          }
+        },
+        tooltip: {
+          callbacks: {
+            label: (context) => {
+              const value = context.raw || 0;
+              const percentage = Math.round((value / total) * 100);
+              return `${context.label}: ${value} (${percentage}%)`;
+            }
+          }
+        },
+        title: {
+          display: true,
+          text: 'Resources Need Distribution',
+          font: {
+            size: 14
+          }
+        }
+      },
+      cutout: '65%',
+      devicePixelRatio: window.devicePixelRatio || 1
+    }
+  });
+
+  const container = ctx.canvas.parentElement;
+  if (container) {
+    resourcesDonutObserver = new ResizeObserver(() => {
+      resourcesDonutChart.resize();
+    });
+    resourcesDonutObserver.observe(container);
+  }
+}
 
 function initHospitalMap() {
   const mapDiv = document.getElementById('hospitalMap');
@@ -347,19 +552,15 @@ function initHospitalMap() {
 
   if (!hospitalMapInstance) {
     hospitalMapInstance = L.map('hospitalMap').setView([39.8, 66.9], 9);
-
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap contributors'
     }).addTo(hospitalMapInstance);
   }
 
-  // ✅ Force Leaflet to calculate layout after brief delay
   setTimeout(() => {
     hospitalMapInstance.invalidateSize();
   }, 200);
 }
-
-let mapMarkers = [];
 
 function updateHospitalMap(data) {
   if (!hospitalMapInstance) return;
@@ -377,16 +578,16 @@ function updateHospitalMap(data) {
         ? "orange"
         : "green";
 
-    // 🔵 Transparent circle halo (outer layer)
+    // Halo effect
     const halo = L.circle([hospital.latitude, hospital.longitude], {
-      radius: 300, // in meters
+      radius: 300,
       color: color,
       fillColor: color,
       fillOpacity: 0.1,
       stroke: false
     }).addTo(hospitalMapInstance);
 
-    // 🔴 Main marker (inner dot)
+    // Main marker
     const marker = L.circleMarker([hospital.latitude, hospital.longitude], {
       radius: 8,
       color,
@@ -403,28 +604,99 @@ function updateHospitalMap(data) {
       Resources Score: ${Math.round(hospital.resources_score * 100)}%
     `);
 
-    mapMarkers.push(marker);
-    mapMarkers.push(halo);
+    mapMarkers.push(marker, halo);
   });
 
-  // 🧭 Auto-fit the map view to visible markers after slight delay
   if (data.length > 0) {
     const latLngs = data
       .filter(h => h.latitude && h.longitude)
       .map(h => [h.latitude, h.longitude]);
 
-    // ⏳ Delay ensures markers are fully added before fitting
     setTimeout(() => {
       hospitalMapInstance.fitBounds(latLngs, {
         padding: [50, 50],
-        maxZoom: 10 // prevents zooming in too close
+        maxZoom: 10
       });
-      hospitalMapInstance.invalidateSize(); // ensure layout fix
+      hospitalMapInstance.invalidateSize();
     }, 200);
   } else {
-    // fallback view
     hospitalMapInstance.setView([39.8, 66.9], 9);
   }
 }
 
+function formatScore(score) {
+  return Math.round(score * 100) + '%';
+}
 
+// Helper to get score class for styling
+function getScoreClass(score) {
+  if (score >= 0.7) return 'score-high';
+  if (score >= 0.4) return 'score-medium';
+  return 'score-low';
+}
+
+function updatePopulationTable(filteredData) {
+  const table = document.querySelector('#populationTable tbody');
+  table.innerHTML = '';
+
+  filteredData.forEach(hospital => {
+    const row = document.createElement('tr');
+
+    row.innerHTML = `
+      <td>${hospital.hospital_name}</td>
+      <td>${hospital.medical_staff}</td>
+      <td>${hospital.bed_capacity}</td>
+      <td>${hospital.total_staff}</td>
+      <td class="score-cell ${getScoreClass(hospital.population_score)}">
+        ${formatScore(hospital.population_score)}
+      </td>
+    `;
+
+    table.appendChild(row);
+  });
+}
+
+function updateInfrastructureTable(filteredData) {
+  const table = document.querySelector('#infrastructureTable tbody');
+  table.innerHTML = '';
+
+  filteredData.forEach(hospital => {
+    const row = document.createElement('tr');
+
+    row.innerHTML = `
+      <td>${hospital.hospital_name}</td>
+      <td>${hospital.building_count}</td>
+      <td>${hospital.earthquake_safe ? 'Yes' : 'No'}</td>
+      <td>${hospital.wall_condition}</td>
+      <td class="score-cell ${getScoreClass(hospital.infrastructure_score)}">
+        ${formatScore(hospital.infrastructure_score)}
+      </td>
+    `;
+
+    table.appendChild(row);
+  });
+}
+
+function updateResourcesTable(filteredData) {
+  const table = document.querySelector('#resourcesTable tbody');
+  table.innerHTML = '';
+
+  filteredData.forEach(hospital => {
+    const row = document.createElement('tr');
+
+    row.innerHTML = `
+      <td>${hospital.hospital_name}</td>
+      <td>${hospital.electricity_supply}</td>
+      <td>${hospital.has_water ? 'Available' : 'Unavailable'}</td>
+      <td>${hospital.heating_condition}</td>
+      <td>${hospital.internet_type}</td>
+      <td>${hospital.restroom_water_condition}</td>
+      <td>${hospital.has_cctv ? 'CCTV' : 'No CCTV'}</td>
+      <td class="score-cell ${getScoreClass(hospital.resources_score)}">
+        ${formatScore(hospital.resources_score)}
+      </td>
+    `;
+
+    table.appendChild(row);
+  });
+}
