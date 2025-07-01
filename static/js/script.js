@@ -21,6 +21,9 @@ function showSection(sectionId) {
         if (infraDonutChart) infraDonutChart.update();
         if (populationDonutChart) populationDonutChart.update();
         if (resourcesDonutChart) resourcesDonutChart.update();
+        if (infraBarChart) infraBarChart.update();
+        if (populationBarChart) populationBarChart.update();
+        if (resourcesBarChart) resourcesBarChart.update();
       }, 300);
     }
     else if (sectionId === "school-dashboard") {
