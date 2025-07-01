@@ -15,6 +15,12 @@ let schoolInfraDonutObserver = null;
 let schoolPopulationDonutObserver = null;
 let schoolResourcesDonutObserver = null;
 
+// BAR CHARTS
+let schoolInfrastructureBarChart = null;
+let schoolPopulationBarChart = null;
+let schoolResourcesBarChart = null;
+
+
 // MAP
 let schoolMapInstance;
 let schoolMapMarkers = [];
@@ -109,6 +115,10 @@ async function loadSchoolData() {
     updateSchoolPopulationDonutChart(schoolPopulationData);
     updateSchoolResourcesDonutChart(schoolResourcesData);
 
+    initSchoolInfrastructureBarChart(schoolData);
+    initSchoolPopulationBarChart(schoolData);
+    initSchoolResourcesBarChart(schoolData);
+
     updateSchoolPopulationTable(schoolData);
     updateSchoolInfrastructureTable(schoolData);
     updateSchoolResourcesTable(schoolData);
@@ -193,6 +203,10 @@ function applySchoolFilters() {
   updateSchoolInfraDonutChart(filteredInfra);
   updateSchoolPopulationDonutChart(filteredPopulation);
   updateSchoolResourcesDonutChart(filteredResources);
+
+  initSchoolInfrastructureBarChart(filteredSchoolData);
+  initSchoolPopulationBarChart(filteredSchoolData);
+  initSchoolResourcesBarChart(filteredSchoolData);
 
   updateSchoolPopulationTable(filteredPopulation);
   updateSchoolInfrastructureTable(filteredInfra);
@@ -630,3 +644,528 @@ document.addEventListener("DOMContentLoaded", () => {
   loadSchoolData();
   initSchoolMap();
 });
+// ....................................school bar charts................................
+
+// Function to initialize and update the infrastructure bar chart
+function initSchoolInfrastructureBarChart(data) {
+  if (!data || data.length === 0) {
+    console.error('No data provided for infrastructure bar chart');
+    return;
+  }
+
+  const ctx = document.getElementById('schoolInfrastructureBarChart');
+  if (!ctx) {
+    console.error('Infrastructure bar chart canvas not found');
+    return;
+  }
+
+  // Define the metrics we want to include in the chart
+  const metrics = [
+   
+      'school_name',
+      'district',
+      'wall_material',
+      'wall_condition',
+      'roof_material',
+      'roof_condition',
+      'windows_condition',
+      'floor_condition',
+      'door_condition',
+      'library_condition',
+      'gym_condition',
+      'stadium_condition',
+      'hall_condition',
+      'kitchen_condition',
+      'boiler_condition',
+      'heating_system_y',
+      'sewage_connection',
+      'dining_condition',
+      'boundary_wall',
+      'repairs_done',
+      'earthquake_safety',
+      'distance_to_school',
+      'outdoor_restroom_material',
+      'outdoor_restroom_condition',
+      'indoor_restroom_condition'
+    
+  ];
+ 
+
+  // Calculate average values for each metric
+  const metricAverages = metrics.map(metric => {
+    const values = data.map(item => {
+      // Convert to number and handle non-numeric values
+      const value = parseFloat(item[metric]);
+      return isNaN(value) ? 0 : value;
+    });
+    
+    // Calculate average, but skip if all values are 0
+    const sum = values.reduce((a, b) => a + b, 0);
+    return sum > 0 ? sum / values.length : 0;
+  });
+
+  // Filter out metrics with no data
+  const validSchoolMetrics = [];
+  const validSchoolAverages = [];
+  
+  metrics.forEach((metric, index) => {
+    if (metricAverages[index] > 0) {
+      // Format the metric name for display
+      const displaySchoolName = metric
+        .replace(/_/g, ' ') // Replace underscores with spaces
+        .replace(/\b\w/g, l => l.toUpperCase()); // Capitalize first letter of each word
+      
+      validSchoolMetrics.push(displaySchoolName);
+      validSchoolAverages.push(metricAverages[index]);
+    }
+  });
+
+  // If no valid data, show a message
+  if (validSchoolMetrics.length === 0) {
+    ctx.parentElement.innerHTML = '<p>No infrastructure data available for the selected filters.</p>';
+    return;
+  }
+
+  // Destroy existing chart if it exists
+  if (schoolInfrastructureBarChart) {
+    schoolInfrastructureBarChart.destroy();
+  }
+
+  // Create new chart
+  schoolInfrastructureBarChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: validSchoolMetrics,
+      datasets: [{
+        label: 'Average Value',
+        data: validSchoolAverages,
+        backgroundColor: 'rgba(54, 162, 235, 0.6)',
+        borderColor: 'rgba(54, 162, 235, 1)',
+        borderWidth: 1,
+        borderRadius: 4
+      }]
+    },
+    options: {
+      indexAxis: 'y', // Horizontal bars
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        title: {
+          display: true,
+          text: 'Infrastructure Metrics Overview',
+          font: {
+            size: 16
+          }
+        },
+        legend: {
+          display: false
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              let label = context.dataset.label || '';
+              if (label) {
+                label += ': ';
+              }
+              // Format numbers to 2 decimal places
+              if (context.raw !== null) {
+                label += Number(context.raw).toFixed(2);
+              }
+              return label;
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          beginAtZero: true,
+          title: {
+            display: true,
+            text: 'Average Value',
+            font: {
+              weight: 'bold'
+            }
+          },
+          grid: {
+            display: true,
+            color: 'rgba(0, 0, 0, 0.05)'
+          }
+        },
+        y: {
+          grid: {
+            display: false
+          }
+        }
+      },
+      animation: {
+        duration: 1000,
+        easing: 'easeInOutQuart'
+      }
+    }
+  });
+}
+
+// Function to initialize and update the population bar chart
+function initSchoolPopulationBarChart(data) {
+  if (!data || data.length === 0) {
+    console.error('No data provided for population bar chart');
+    return;
+  }
+
+  const ctx = document.getElementById('schoolPopulationBarChart');
+  if (!ctx) {
+    console.error('Population bar chart canvas not found');
+    return;
+  }
+
+  // Define the metrics we want to include in the chart
+  const schoolMetrics = [
+    'school_name',
+    'district',
+    'usage_percent',
+    
+  ];
+
+  // Calculate values for each metric
+  const schoolMetricValues = schoolMetrics.map(metric => {
+    const values = data.map(item => {
+      // Convert to number and handle non-numeric values
+      const value = parseFloat(item[metric]);
+      return isNaN(value) ? 0 : value;
+    });
+    
+    // Calculate sum for the metric
+    return values.reduce((a, b) => a + b, 0);
+  });
+
+  // Format labels for display
+  const schoolDisplayLabels = [
+    'School Name',
+    'District',
+    'Usage Percent',
+    
+  ];
+
+  // Scale the population score for better visualization
+  const populationScoreIndex = schoolMetrics.indexOf('population_score');
+  if (populationScoreIndex !== -1) {
+    const maxValue = Math.max(...schoolMetricValues.filter((_, i) => i !== populationScoreIndex));
+    if (maxValue > 0) {
+      const scaleFactor = maxValue * 1.5; // Scale to make it visible but not dominate
+      schoolMetricValues[populationScoreIndex] = schoolMetricValues[populationScoreIndex] * scaleFactor;
+    }
+  }
+
+  // Destroy existing chart if it exists
+  if (schoolPopulationBarChart) {
+    schoolPopulationBarChart.destroy();
+  }
+
+  // Create new chart
+  schoolPopulationBarChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: schoolDisplayLabels,
+      datasets: [{
+        label: 'Total Value',
+        data: schoolMetricValues,
+        backgroundColor: [
+          'rgba(75, 192, 192, 0.6)',  // Teal for school name
+          'rgba(153, 102, 255, 0.6)', // Purple for district
+          'rgba(255, 159, 64, 0.6)',  // Orange for usage percent
+          'rgba(255, 99, 132, 0.6)'   // Pink for population score
+        ],
+        borderColor: [
+          'rgba(75, 192, 192, 1)',
+          'rgba(153, 102, 255, 1)',
+          'rgba(255, 159, 64, 1)',
+          'rgba(255, 99, 132, 1)'
+        ],
+        borderWidth: 1,
+        borderRadius: 4
+      }]
+    },
+    options: {
+      indexAxis: 'y', // Horizontal bars
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        title: {
+          display: true,
+          text: 'Population Metrics Overview',
+          font: {
+            size: 16
+          }
+        },
+        legend: {
+          display: false
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              let label = context.dataset.label || '';
+              if (label) {
+                label += ': ';
+              }
+              // Format numbers appropriately
+              let value = context.raw;
+              if (context.dataIndex === 3) { // Population score (scaled)
+                const actualValue = value / (context.chart.scales.x.max / 1.5);
+                label += actualValue.toFixed(2) + ' (scaled to fit)';
+              } else {
+                label += Math.round(value);
+              }
+              return label;
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          beginAtZero: true,
+          title: {
+            display: true,
+            text: 'Total Value',
+            font: {
+              weight: 'bold'
+            }
+          },
+          grid: {
+            display: true,
+            color: 'rgba(0, 0, 0, 0.05)'
+          },
+          ticks: {
+            callback: function(value) {
+              // Don't show the scaled values for population score
+              return value % 1 === 0 ? value : '';
+            }
+          }
+        },
+        y: {
+          grid: {
+            display: false
+          }
+        }
+      },
+      animation: {
+        duration: 1000,
+        easing: 'easeInOutQuart'
+      }
+    }
+  });
+}
+
+// Function to initialize and update the resources bar chart
+function initSchoolResourcesBarChart(data) {
+  if (!data || data.length === 0) {
+    console.error('No data provided for resources bar chart');
+    return;
+  }
+
+  const ctx = document.getElementById('schoolResourcesBarChart');
+  if (!ctx) {
+    console.error('Resources bar chart canvas not found');
+    return;
+  }
+
+  // Define the metrics we want to include in the chart
+  const metrics = [
+    'school_name',
+    'district',
+    'sports_equipment',
+    'drinking_water',
+    'generator',
+    'solar_panels',
+    'heating_system_x',
+    'fuel_source',
+    'water',
+    'drinking_water_supply',
+    'internet_connection',
+    'internet_usage',
+    'fire_safety',
+    'video_surveillance',
+    'public_transport',
+    'musculoskeletal_disorders_facilities',
+    'restroom_location',
+    'restroom_stalls',
+    'handwashing',
+    'restroom_safe',
+    'restroom_connection',
+    'classrooms_warm',
+    'water_pipeline',
+    'resources_score',
+    'electrical_system',
+    'lighting_system',
+    'boiler_condition',
+    'restroom_water',
+    'water_supply_issues',
+    'restroom_lighting',
+    'restroom_pathway',
+    'modern_standards',
+    'satisfaction'
+      
+
+  ];
+
+  // Define friendly names for the metrics
+  const metricLabels = [
+    'School Name',
+    'District',
+    'Sports Equipment',
+    'Drinking Water',
+    'Generator',
+    'Solar Panels',
+    'Heating System',
+    'Fuel Source',
+    'Water',
+    'Drinking Water Supply',
+    'Internet Connection',
+    'Internet Usage',
+    'Fire Safety',
+    'Video Surveillance',
+    'Public Transport',
+    'Musculoskeletal Disorders Facilities',
+    'Restroom Location',
+    'Restroom Stalls',
+    'Handwashing',
+    'Restroom Safe',
+    'Restroom Connection',
+    'Classrooms Warm',
+    'Water Pipeline',
+    'Resources Score',
+    'Electrical System',
+    'Lighting System',
+    'Boiler Condition',
+    'Restroom Water',
+    'Water Supply Issues',
+    'Restroom Lighting',
+    'Restroom Pathway',
+    'Modern Standards',
+    'Satisfaction'
+
+    
+  ];
+
+  // Calculate percentage of 'Yes' for each metric
+  const metricData = metrics.map((metric, index) => {
+    const total = data.length;
+    if (total === 0) return 0;
+    
+    const yesCount = data.filter(item => {
+      const value = item[metric];
+      // Handle different possible 'yes' values
+      return value === true || value === 'Yes' || value === 'yes' || value === 1 || value === '1';
+    }).length;
+    
+    return (yesCount / total) * 100; // Convert to percentage
+  });
+
+  // Create gradient for bars
+  const gradient = ctx.getContext('2d').createLinearGradient(0, 0, 0, 900);
+  gradient.addColorStop(0, 'rgba(21, 3, 126, 0.9)');
+  gradient.addColorStop(1, 'rgba(16, 0, 105, 0.2)');
+
+  // Destroy existing chart if it exists
+  if (resourcesBarChart) {
+    resourcesBarChart.destroy();
+  }
+
+  // Create new chart
+  resourcesBarChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: metricLabels,
+      datasets: [{
+        label: 'Percentage Available',
+        data: metricData,
+        backgroundColor: gradient,
+        borderColor: 'rgba(75, 192, 192, 1)',
+        borderWidth: 1,
+        borderRadius: 4,
+        barPercentage: 0.8,
+        categoryPercentage: 0.9
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        title: {
+          display: false
+        },
+        legend: {
+          display: false
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              return context.raw.toFixed(1) + '%';
+            }
+          }
+        }
+      },
+      scales: {
+        y: {
+          grid: {
+            display: false
+          },
+          ticks: {
+            autoSkip: false,
+            font: {
+              size: 11
+            },
+            padding: 5
+          }
+        },
+        x: {
+          beginAtZero: true,
+          max: 100,
+          title: {
+            display: true,
+            text: 'Percentage',
+            font: {
+              weight: 'bold'
+            }
+          },
+          ticks: {
+            callback: function(value) {
+              return value + '%';
+            }
+          },
+          grid: {
+            color: 'rgba(0, 0, 0, 0.05)'
+          }
+        }
+      },
+      animation: {
+        duration: 1000,
+        easing: 'easeInOutQuart'
+      },
+      layout: {
+        padding: {
+          left: 10,
+          right: 10,
+          top: 10,
+          bottom: 10
+        }
+      },
+      // Adjust height for horizontal bars
+      maintainAspectRatio: false,
+      aspectRatio: 1.5,
+      // Add scrollbar plugin for horizontal scrolling if needed
+      plugins: {
+        legend: {
+          display: false
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              return context.raw.toFixed(1) + '%';
+            }
+          }
+        }
+      }
+    }
+  });
+}

@@ -15,6 +15,11 @@ let preSchoolInfraDonutObserver = null;
 let preSchoolPopulationDonutObserver = null;
 let preSchoolResourcesDonutObserver = null;
 
+// BAR CHARTS
+let preSchoolInfrastructureBarChart = null;
+let preSchoolPopulationBarChart = null;
+let preSchoolResourcesBarChart = null;
+
 // MAP
 let preSchoolMapInstance;
 let preSchoolMapMarkers = [];
@@ -123,6 +128,10 @@ async function loadPreschoolData() {
     updatePreSchoolPopulationDonutChart(preSchoolPopulationData);
     updatePreSchoolResourcesDonutChart(preSchoolResourcesData);
 
+    initPreSchoolInfrastructureBarChart(preSchoolInfrastructureData);
+    initPreSchoolPopulationBarChart(preSchoolPopulationData);
+    initPreSchoolResourcesBarChart(preSchoolResourcesData);
+
     updatePreSchoolPopulationTable(preSchoolPopulationData);
     updatePreSchoolInfrastructureTable(preSchoolInfrastructureData);
     updatePreSchoolResourcesTable(preSchoolResourcesData);
@@ -205,6 +214,10 @@ function applyPreSchoolFilters() {
   updatePreSchoolInfraDonutChart(filteredInfra);
   updatePreSchoolPopulationDonutChart(filteredPopulation);
   updatePreSchoolResourcesDonutChart(filteredResources);
+
+  initPreSchoolInfrastructureBarChart(filteredInfra);
+  initPreSchoolPopulationBarChart(filteredPopulation);
+  initPreSchoolResourcesBarChart(filteredResources);
 
   updatePreSchoolPopulationTable(filteredPopulation);
   updatePreSchoolInfrastructureTable(filteredInfra);
@@ -691,3 +704,542 @@ document.addEventListener("DOMContentLoaded", () => {
   loadPreschoolData();
   initPreSchoolMap();
 });
+
+// Function to initialize and update the infrastructure bar chart
+function initPreSchoolInfrastructureBarChart(data) {
+  if (!data || data.length === 0) {
+    console.error('No data provided for infrastructure bar chart');
+    return;
+  }
+
+  const ctx = document.getElementById('preschoolInfrastructureBarChart');
+  if (!ctx) {
+    console.error('Infrastructure bar chart canvas not found');
+    return;
+  }
+
+  // Define the metrics we want to include in the chart
+  const metrics = [
+    'kindergarten_name',
+    'district',
+    'outside_branches',
+    'group_count',
+    'land_area_built',
+    'external_sweeping_area',
+    'internal_cleaning_area',
+    'garden_area',
+    'leased_garden_area',
+    'vacant_land_area',
+    'educational_building_count',
+    'floor_count',
+    'wall_material',
+    'wall_condition',
+    'roof_material',
+    'roof_condition',
+    'window_condition',
+    'floor_condition',
+    'door_condition',
+    'assembly_hall_condition',
+    'repaired_or_reconstructed',
+    'earthquake_safety',
+    'meets_modern_infrastructure',
+    'satisfied_with_condition',
+    'age_score'
+  ];
+
+  // Calculate average values for each metric
+  const metricAverages = metrics.map(metric => {
+    const values = data.map(item => {
+      // Convert to number and handle non-numeric values
+      const value = parseFloat(item[metric]);
+      return isNaN(value) ? 0 : value;
+    });
+    
+    // Calculate average, but skip if all values are 0
+    const sum = values.reduce((a, b) => a + b, 0);
+    return sum > 0 ? sum / values.length : 0;
+  });
+
+  // Filter out metrics with no data
+  const validMetrics = [];
+  const validAverages = [];
+  
+  metrics.forEach((metric, index) => {
+    if (metricAverages[index] > 0) {
+      // Format the metric name for display
+      const displayName = metric
+        .replace(/_/g, ' ') // Replace underscores with spaces
+        .replace(/\b\w/g, l => l.toUpperCase()); // Capitalize first letter of each word
+      
+      validMetrics.push(displayName);
+      validAverages.push(metricAverages[index]);
+    }
+  });
+
+  // If no valid data, show a message
+  if (validMetrics.length === 0) {
+    ctx.parentElement.innerHTML = '<p>No infrastructure data available for the selected filters.</p>';
+    return;
+  }
+
+  // Destroy existing chart if it exists
+  if (preSchoolInfrastructureBarChart) {
+    preSchoolInfrastructureBarChart.destroy();
+  }
+
+  // Create new chart
+  preSchoolInfrastructureBarChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: validMetrics,
+      datasets: [{
+        label: 'Average Value',
+        data: validAverages,
+        backgroundColor: 'rgba(54, 162, 235, 0.6)',
+        borderColor: 'rgba(54, 162, 235, 1)',
+        borderWidth: 1,
+        borderRadius: 4
+      }]
+    },
+    options: {
+      indexAxis: 'y', // Horizontal bars
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        title: {
+          display: true,
+          text: 'Infrastructure Metrics Overview',
+          font: {
+            size: 16
+          }
+        },
+        legend: {
+          display: false
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              let label = context.dataset.label || '';
+              if (label) {
+                label += ': ';
+              }
+              // Format numbers to 2 decimal places
+              if (context.raw !== null) {
+                label += Number(context.raw).toFixed(2);
+              }
+              return label;
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          beginAtZero: true,
+          title: {
+            display: true,
+            text: 'Average Value',
+            font: {
+              weight: 'bold'
+            }
+          },
+          grid: {
+            display: true,
+            color: 'rgba(0, 0, 0, 0.05)'
+          }
+        },
+        y: {
+          grid: {
+            display: false
+          }
+        }
+      },
+      animation: {
+        duration: 1000,
+        easing: 'easeInOutQuart'
+      }
+    }
+  });
+}
+// Function to initialize and update the population bar chart
+function initPreSchoolPopulationBarChart(data) {
+  if (!data || data.length === 0) {
+    console.error('No data provided for population bar chart');
+    return;
+  }
+
+  const ctx = document.getElementById('preschoolPopulationBarChart');
+  if (!ctx) {
+    console.error('Population bar chart canvas not found');
+    return;
+  }
+
+  // Define the metrics we want to include in the chart
+  const metrics = [
+    'kindergarten_name',
+    'district',
+    'design_capacity',
+    'total_students',
+    'boys',
+    'girls',
+    'staff_total',
+    'staff_men',
+    'staff_women',
+    'population_score' 
+    
+  ];
+
+  // Calculate values for each metric
+  const metricValues = metrics.map(metric => {
+    const values = data.map(item => {
+      // Convert to number and handle non-numeric values
+      const value = parseFloat(item[metric]);
+      return isNaN(value) ? 0 : value;
+    });
+    
+    // Calculate sum for the metric
+    return values.reduce((a, b) => a + b, 0);
+  });
+
+  // Format labels for display
+  const displayLabels = [
+    'Kindergarten Name',
+    'District',
+    'Design Capacity',
+    'Total Students',
+    'Boys',
+    'Girls',
+    'Staff Total',
+    'Staff Men',
+    'Staff Women',
+    'Population Score',
+    
+  ];
+
+  // Scale the population score for better visualization
+  const populationScoreIndex = metrics.indexOf('population_score');
+  if (populationScoreIndex !== -1) {
+    const maxValue = Math.max(...metricValues.filter((_, i) => i !== populationScoreIndex));
+    if (maxValue > 0) {
+      const scaleFactor = maxValue * 1.5; // Scale to make it visible but not dominate
+      metricValues[populationScoreIndex] = metricValues[populationScoreIndex] * scaleFactor;
+    }
+  }
+
+  // Destroy existing chart if it exists
+  if (preSchoolPopulationBarChart) {
+    preSchoolPopulationBarChart.destroy();
+  }
+
+  // Create new chart
+  preSchoolPopulationBarChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: displayLabels,
+      datasets: [{
+        label: 'Total Value',
+        data: metricValues,
+        backgroundColor: [
+          'rgba(75, 192, 192, 0.6)',  // Teal for kindergarten name
+          'rgba(153, 102, 255, 0.6)', // Purple for district
+          'rgba(255, 159, 64, 0.6)',  // Orange for design capacity
+          'rgba(255, 99, 132, 0.6)'   // Pink for total students
+        ],
+        borderColor: [
+          'rgba(75, 192, 192, 1)',
+          'rgba(153, 102, 255, 1)',
+          'rgba(255, 159, 64, 1)',
+          'rgba(255, 99, 132, 1)'
+        ],
+        borderWidth: 1,
+        borderRadius: 4
+      }]
+    },
+    options: {
+      indexAxis: 'y', // Horizontal bars
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        title: {
+          display: true,
+          text: 'Population Metrics Overview',
+          font: {
+            size: 16
+          }
+        },
+        legend: {
+          display: false
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              let label = context.dataset.label || '';
+              if (label) {
+                label += ': ';
+              }
+              // Format numbers appropriately
+              let value = context.raw;
+              if (context.dataIndex === 3) { // Population score (scaled)
+                const actualValue = value / (context.chart.scales.x.max / 1.5);
+                label += actualValue.toFixed(2) + ' (scaled to fit)';
+              } else {
+                label += Math.round(value);
+              }
+              return label;
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          beginAtZero: true,
+          title: {
+            display: true,
+            text: 'Total Value',
+            font: {
+              weight: 'bold'
+            }
+          },
+          grid: {
+            display: true,
+            color: 'rgba(0, 0, 0, 0.05)'
+          },
+          ticks: {
+            callback: function(value) {
+              // Don't show the scaled values for population score
+              return value % 1 === 0 ? value : '';
+            }
+          }
+        },
+        y: {
+          grid: {
+            display: false
+          }
+        }
+      },
+      animation: {
+        duration: 1000,
+        easing: 'easeInOutQuart'
+      }
+    }
+  });
+}
+// Function to initialize and update the resources bar chart
+function initPreSchoolResourcesBarChart(data) {
+  if (!data || data.length === 0) {
+    console.error('No data provided for resources bar chart');
+    return;
+  }
+
+  const ctx = document.getElementById('preschoolResourcesBarChart');
+  if (!ctx) {
+    console.error('Resources bar chart canvas not found');
+    return;
+  }
+
+  // Define the metrics we want to include in the chart
+  const metrics = [
+    'kindergarten_name',
+    'district',
+    'sports_equipment_available',
+    'kitchen_condition',
+    'kitchen_water_supply',
+    'electricity_condition',
+    'has_generator',
+    'has_solar_panels',
+    'internal_electrical_condition',
+    'lighting_condition',
+    'heating_source',
+    'heating_fuel_source',
+    'boiler_room_condition',
+    'internal_heating_condition',
+    'water_availability',
+    'drinking_water_source',
+    'has_fence',
+    'internet_type',
+    'internet_usage',
+    'fire_safety_available',
+    'has_cctv',
+    'has_public_transport_nearby',
+    'accessible_for_disabled',
+    'restroom_location',
+    'restroom_water_condition',
+    'restroom_connected_to_sewage',
+    'restroom_doors_partitions',
+    'restroom_handwash_water_soap',
+    'restroom_sewage_issues',
+    'restroom_water_issues',
+    'restroom_lighting_safe',
+    'classrooms_warm_in_winter',
+    'indoor_pipeline_installed',
+    'children_walk_more_than_3km',
+    'satisfied_with_condition',
+    'resources_score'
+      
+
+  ];
+
+  // Define friendly names for the metrics
+  const metricLabels = [
+    'Kindergarten Name',
+    'District',
+    'Sports Equipment Available',
+    'Kitchen Condition',
+    'Kitchen Water Supply',
+    'Electricity Condition',
+    'Has Generator',
+    'Has Solar Panels',
+    'Internal Electrical Condition',
+    'Lighting Condition',
+    'Heating Source',
+    'Heating Fuel Source',
+    'Boiler Room Condition',
+    'Internal Heating Condition',
+    'Water Availability',
+    'Drinking Water Source',
+    'Has Fence',
+    'Internet Type',
+    'Internet Usage',
+    'Fire Safety Available',
+    'Has CCTV',
+    'Has Public Transport Nearby',
+    'Accessible For Disabled',
+    'Restroom Location',
+    'Restroom Water Condition',
+    'Restroom Connected To Sewage',
+    'Restroom Doors Partitions',
+    'Restroom Handwash Water Soap',
+    'Restroom Sewage Issues',
+    'Restroom Water Issues',
+    'Restroom Lighting Safe',
+    'Classrooms Warm In Winter',
+    'Indoor Pipeline Installed',
+    'Children Walk More Than 3km',
+    'Satisfied With Condition',
+    'Resources Score'
+
+
+  ];
+
+  // Calculate percentage of 'Yes' for each metric
+  const metricData = metrics.map((metric, index) => {
+    const total = data.length;
+    if (total === 0) return 0;
+    
+    const yesCount = data.filter(item => {
+      const value = item[metric];
+      // Handle different possible 'yes' values
+      return value === true || value === 'Yes' || value === 'yes' || value === 1 || value === '1';
+    }).length;
+    
+    return (yesCount / total) * 100; // Convert to percentage
+  });
+
+  // Create gradient for bars
+  const gradient = ctx.getContext('2d').createLinearGradient(0, 0, 0, 900);
+  gradient.addColorStop(0, 'rgba(21, 3, 126, 0.9)');
+  gradient.addColorStop(1, 'rgba(16, 0, 105, 0.2)');
+
+  // Destroy existing chart if it exists
+  if (preSchoolResourcesBarChart) {
+    preSchoolResourcesBarChart.destroy();
+  }
+
+  // Create new chart
+  preSchoolResourcesBarChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: metricLabels,
+      datasets: [{
+        label: 'Percentage Available',
+        data: metricData,
+        backgroundColor: gradient,
+        borderColor: 'rgba(75, 192, 192, 1)',
+        borderWidth: 1,
+        borderRadius: 4,
+        barPercentage: 0.8,
+        categoryPercentage: 0.9
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        title: {
+          display: false
+        },
+        legend: {
+          display: false
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              return context.raw.toFixed(1) + '%';
+            }
+          }
+        }
+      },
+      scales: {
+        y: {
+          grid: {
+            display: false
+          },
+          ticks: {
+            autoSkip: false,
+            font: {
+              size: 11
+            },
+            padding: 5
+          }
+        },
+        x: {
+          beginAtZero: true,
+          max: 100,
+          title: {
+            display: true,
+            text: 'Percentage',
+            font: {
+              weight: 'bold'
+            }
+          },
+          ticks: {
+            callback: function(value) {
+              return value + '%';
+            }
+          },
+          grid: {
+            color: 'rgba(0, 0, 0, 0.05)'
+          }
+        }
+      },
+      animation: {
+        duration: 1000,
+        easing: 'easeInOutQuart'
+      },
+      layout: {
+        padding: {
+          left: 10,
+          right: 10,
+          top: 10,
+          bottom: 10
+        }
+      },
+      // Adjust height for horizontal bars
+      maintainAspectRatio: false,
+      aspectRatio: 1.5,
+      // Add scrollbar plugin for horizontal scrolling if needed
+      plugins: {
+        legend: {
+          display: false
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              return context.raw.toFixed(1) + '%';
+            }
+          }
+        }
+      }
+    }
+  });
+}

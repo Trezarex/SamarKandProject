@@ -1150,3 +1150,9 @@ canvas {
 #resourcesBarChart {
     height: 550px !important;
 }
+#preschoolResourcesBarChart {
+    height: 550px !important;
+}
+#schoolResourcesBarChart {
+    height: 550px !important;
+}

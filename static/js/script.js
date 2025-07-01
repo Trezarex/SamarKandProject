@@ -38,6 +38,14 @@ function showSection(sectionId) {
         if (schoolInfraDonutChart) schoolInfraDonutChart.update();
         if (schoolPopulationDonutChart) schoolPopulationDonutChart.update();
         if (schoolResourcesDonutChart) schoolResourcesDonutChart.update();
+        // if (infraBarChart) infraBarChart.update();
+        // if (populationBarChart) populationBarChart.update();
+        // if (resourcesBarChart) resourcesBarChart.update();
+        if (schoolInfrastructureBarChart) schoolInfrastructureBarChart.update();
+        if (schoolPopulationBarChart) schoolPopulationBarChart.update();
+        if (schoolResourcesBarChart) schoolResourcesBarChart.update();
+
+        
       }, 300);
     }
     else if (sectionId === "preschool-dashboard") {
@@ -51,6 +59,9 @@ function showSection(sectionId) {
         if (preSchoolInfraDonutChart) preSchoolInfraDonutChart.update();
         if (preSchoolPopulationDonutChart) preSchoolPopulationDonutChart.update();
         if (preSchoolResourcesDonutChart) preSchoolResourcesDonutChart.update();
+        if (preSchoolInfrastructureBarChart) preSchoolInfrastructureBarChart.update();
+        if (preSchoolPopulationBarChart) preSchoolPopulationBarChart.update();
+        if (preSchoolResourcesBarChart) preSchoolResourcesBarChart.update();
       }, 300);
     }
   }
