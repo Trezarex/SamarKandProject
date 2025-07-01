@@ -335,95 +335,138 @@
       <div class="dashboard-container">
         <div class="dashboard-header">
           <h1 class="dashboard-title">School Dashboard</h1>
-
-          <!-- Filters -->
+          <!-- Filters (copied and adapted from hospital dashboard) -->
           <div class="filters-container">
             <div class="filter-group">
-              <label for="schoolRegionFilter">Region:</label>
-              <select id="schoolRegionFilter" onchange="applySchoolFilters()">
-                <option value="">All Regions</option>
-              </select>
-            </div>
-            <div class="filter-group">
               <label for="schoolDistrictFilter">District:</label>
-              <select id="schoolDistrictFilter" onchange="applySchoolFilters()">
-                <option value="">All Districts</option>
-              </select>
+              <select id="schoolDistrictFilter" multiple onchange="applySchoolFilters()"></select>
             </div>
             <div class="filter-group">
               <label for="schoolEntityFilter" id="schoolEntityLabel">School:</label>
-              <select id="schoolEntityFilter" onchange="applySchoolFilters()">
-                <option value="">All Schools</option>
-              </select>
+              <select id="schoolEntityFilter" multiple onchange="applySchoolFilters()"></select>
             </div>
           </div>
         </div>
 
-        <!-- Disclaimer -->
-        <div id="schoolDashboardDisclaimer" class="dashboard-disclaimer" style="display:none;"></div>
-
-        <!-- Summary Cards with tooltips -->
+        <!-- Summary Cards -->
         <section class="summary-cards">
           <div class="card">
-            <h3>Total Count
-              <span class="info-tooltip" title="Number of entities in the selected dataset and filters.">ℹ️</span>
+            <h3>Total Schools
+              <span class="info-tooltip" title="Number of schools after applying filters.">ℹ️</span>
             </h3>
             <p id="schoolTotalCount">-</p>
           </div>
           <div class="card">
-            <h3>Avg. Satisfaction
-              <span class="info-tooltip" title="Average satisfaction score (0–5 scale).">ℹ️</span>
+            <h3>Population Score
+              <span class="info-tooltip" title="Average population satisfaction score.">ℹ️</span>
             </h3>
             <p id="schoolAvgSatisfaction">-</p>
           </div>
           <div class="card">
             <h3>Infrastructure Score
-              <span class="info-tooltip" title="Average infrastructure score (percentage, 0–100%).">ℹ️</span>
+              <span class="info-tooltip" title="Average infrastructure quality score.">ℹ️</span>
             </h3>
             <p id="schoolInfraScore">-</p>
           </div>
           <div class="card">
             <h3>Resources Score
-              <span class="info-tooltip" title="Average resources score (percentage, 0–100%).">ℹ️</span>
+              <span class="info-tooltip" title="Average score for resource availability.">ℹ️</span>
             </h3>
             <p id="schoolResourcesScore">-</p>
           </div>
         </section>
 
-        <!-- Charts -->
-        <section class="charts-grid">
-          <div class="chart-box">
-            <h2>Infrastructure vs Resources</h2>
-            <canvas id="schoolInfraChart"></canvas>
-          </div>
-          <div class="chart-box">
-            <h2>Satisfaction Distribution</h2>
-            <canvas id="schoolSatisfactionChart"></canvas>
-          </div>
-          <div class="chart-box">
-            <h2>Regional Comparison</h2>
-            <canvas id="schoolRegionalChart"></canvas>
-          </div>
-          <div class="chart-box">
-            <h2>Performance Metrics</h2>
-            <canvas id="schoolPerformanceChart"></canvas>
-          </div>
-        </section>
+        <!-- School Map -->
+        <div id="schoolMapContainer" class="hospital-map-section">
+          <h2 class="section-title">School Need Map</h2>
+          <div id="schoolMap" style="height: 500px; width: 100%; border-radius: 12px;"></div>
+        </div>
 
-        <!-- Loading/Error Overlay -->
-        <div id="schoolDashboardOverlay" class="dashboard-overlay" style="display:none;">
-          <div class="overlay-content">
-            <div class="spinner"></div>
-            <div id="schoolOverlayMessage">Loading dashboard data...</div>
+        <!-- Donut Charts Row -->
+        <div class="charts-row">
+          <div class="chart-box">
+            <h2 style="text-align: center; font-weight: bolder;">Infrastructure Score Distribution</h2>
+            <div class="chart-container">
+              <canvas id="schoolInfraDonutChart"></canvas>
+            </div>
+          </div>
+          <div class="chart-box">
+            <h2 style="text-align: center; font-weight: bolder;">Population Score Distribution</h2>
+            <div class="chart-container">
+              <canvas id="schoolPopulationDonutChart"></canvas>
+            </div>
+          </div>
+          <div class="chart-box">
+            <h2 style="text-align: center; font-weight: bolder;">Resources Score Distribution</h2>
+            <div class="chart-container">
+              <canvas id="schoolResourcesDonutChart"></canvas>
+            </div>
           </div>
         </div>
 
-        <!-- Modal for drill-down -->
-        <div id="schoolModal" class="modal" style="display:none;">
-          <div class="modal-content">
-            <span class="close" id="school-modal-close">&times;</span>
-            <div id="school-modal-body">
-              <!-- Drill-down details will be rendered here by JS -->
+        <!-- Tables Section -->
+        <div class="tables-container">
+          <div class="tables-row">
+            <!-- Population Table -->
+            <div class="table-box">
+              <h2>Population & Capacity Metrics</h2>
+              <div class="table-container">
+                <table id="schoolPopulationTable">
+                  <thead>
+                    <tr>
+                      <th>School</th>
+                      <th>Usage %</th>
+                      <th>Population Score</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Infrastructure Table -->
+            <div class="table-box">
+              <h2>Infrastructure Metrics</h2>
+              <div class="table-container">
+                <table id="schoolInfrastructureTable">
+                  <thead>
+                    <tr>
+                      <th>School</th>
+                      <th>Wall Material</th>
+                      <th>Wall Condition</th>
+                      <th>Roof Material</th>
+                      <th>Roof Condition</th>
+                      <th>Windows Condition</th>
+                      <th>Infra Score</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Resources Table (Full width) -->
+          <div class="tables-row">
+            <div class="table-box full-width">
+              <h2>Resource Availability Metrics</h2>
+              <div class="table-container">
+                <table id="schoolResourcesTable">
+                  <thead>
+                    <tr>
+                      <th>School</th>
+                      <th>Drinking Water</th>
+                      <th>Generator</th>
+                      <th>Solar Panels</th>
+                      <th>Internet</th>
+                      <th>Fire Safety</th>
+                      <th>Restroom</th>
+                      <th>Resources Score</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
             </div>
           </div>
         </div>
@@ -435,96 +478,185 @@
       <div class="dashboard-container">
         <div class="dashboard-header">
           <h1 class="dashboard-title">Preschool Dashboard</h1>
-
-
-          <!-- Filters -->
+          <!-- Filters (mirroring school dashboard) -->
           <div class="filters-container">
             <div class="filter-group">
-              <label for="preschoolRegionFilter">Region:</label>
-              <select id="preschoolRegionFilter" onchange="applyPreschoolFilters()">
-                <option value="">All Regions</option>
-              </select>
-            </div>
-            <div class="filter-group">
               <label for="preschoolDistrictFilter">District:</label>
-              <select id="preschoolDistrictFilter" onchange="applyPreschoolFilters()">
-                <option value="">All Districts</option>
-              </select>
+              <select id="preschoolDistrictFilter" multiple onchange="applyPreschoolFilters()"></select>
             </div>
             <div class="filter-group">
               <label for="preschoolEntityFilter" id="preschoolEntityLabel">Preschool:</label>
-              <select id="preschoolEntityFilter" onchange="applyPreschoolFilters()">
-                <option value="">All Preschools</option>
-              </select>
+              <select id="preschoolEntityFilter" multiple onchange="applyPreschoolFilters()"></select>
             </div>
           </div>
         </div>
 
-        <!-- Disclaimer -->
-        <div id="preschoolDashboardDisclaimer" class="dashboard-disclaimer" style="display:none;"></div>
-
-        <!-- Summary Cards with tooltips -->
+        <!-- Summary Cards -->
         <section class="summary-cards">
           <div class="card">
-            <h3>Total Count
-              <span class="info-tooltip" title="Number of entities in the selected dataset and filters.">ℹ️</span>
+            <h3>Total Preschools
+              <span class="info-tooltip" title="Number of preschools after applying filters.">ℹ️</span>
             </h3>
             <p id="preschoolTotalCount">-</p>
           </div>
           <div class="card">
-            <h3>Avg. Satisfaction
-              <span class="info-tooltip" title="Average satisfaction score (0–5 scale).">ℹ️</span>
+            <h3>Population Score
+              <span class="info-tooltip" title="Average population satisfaction score.">ℹ️</span>
             </h3>
             <p id="preschoolAvgSatisfaction">-</p>
           </div>
           <div class="card">
             <h3>Infrastructure Score
-              <span class="info-tooltip" title="Average infrastructure score (percentage, 0–100%).">ℹ️</span>
+              <span class="info-tooltip" title="Average infrastructure quality score.">ℹ️</span>
             </h3>
             <p id="preschoolInfraScore">-</p>
           </div>
           <div class="card">
             <h3>Resources Score
-              <span class="info-tooltip" title="Average resources score (percentage, 0–100%).">ℹ️</span>
+              <span class="info-tooltip" title="Average score for resource availability.">ℹ️</span>
             </h3>
             <p id="preschoolResourcesScore">-</p>
           </div>
         </section>
 
-        <!-- Charts -->
-        <section class="charts-grid">
-          <div class="chart-box">
-            <h2>Infrastructure vs Resources</h2>
-            <canvas id="preschoolInfraChart"></canvas>
-          </div>
-          <div class="chart-box">
-            <h2>Satisfaction Distribution</h2>
-            <canvas id="preschoolSatisfactionChart"></canvas>
-          </div>
-          <div class="chart-box">
-            <h2>Regional Comparison</h2>
-            <canvas id="preschoolRegionalChart"></canvas>
-          </div>
-          <div class="chart-box">
-            <h2>Performance Metrics</h2>
-            <canvas id="preschoolPerformanceChart"></canvas>
-          </div>
-        </section>
+        <!-- Preschool Map -->
+        <div id="preschoolMapContainer" class="hospital-map-section">
+          <h2 class="section-title">Preschool Need Map</h2>
+          <div id="preschoolMap" style="height: 500px; width: 100%; border-radius: 12px;"></div>
+        </div>
 
-        <!-- Loading/Error Overlay -->
-        <div id="preschoolDashboardOverlay" class="dashboard-overlay" style="display:none;">
-          <div class="overlay-content">
-            <div class="spinner"></div>
-            <div id="preschoolOverlayMessage">Loading dashboard data...</div>
+        <!-- Donut Charts Row -->
+        <div class="charts-row">
+          <div class="chart-box">
+            <h2 style="text-align: center; font-weight: bolder;">Infrastructure Score Distribution</h2>
+            <div class="chart-container">
+              <canvas id="preschoolInfraDonutChart"></canvas>
+            </div>
+          </div>
+          <div class="chart-box">
+            <h2 style="text-align: center; font-weight: bolder;">Population Score Distribution</h2>
+            <div class="chart-container">
+              <canvas id="preschoolPopulationDonutChart"></canvas>
+            </div>
+          </div>
+          <div class="chart-box">
+            <h2 style="text-align: center; font-weight: bolder;">Resources Score Distribution</h2>
+            <div class="chart-container">
+              <canvas id="preschoolResourcesDonutChart"></canvas>
+            </div>
           </div>
         </div>
 
-        <!-- Modal for drill-down -->
-        <div id="preschoolModal" class="modal" style="display:none;">
-          <div class="modal-content">
-            <span class="close" id="preschool-modal-close">&times;</span>
-            <div id="preschool-modal-body">
-              <!-- Drill-down details will be rendered here by JS -->
+        <!-- Tables Section -->
+        <div class="tables-container">
+          <div class="tables-row">
+            <!-- Population Table -->
+            <div class="table-box">
+              <h2>Population & Capacity Metrics</h2>
+              <div class="table-container">
+                <table id="preschoolPopulationTable">
+                  <thead>
+                    <tr>
+                      <th>Preschool</th>
+                      <th>Design Capacity</th>
+                      <th>Total Students</th>
+                      <th>Total Staff</th>
+                      <th>Population Score</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Infrastructure Table -->
+            <div class="table-box">
+              <h2>Infrastructure Metrics</h2>
+              <div class="table-container">
+                <table id="preschoolInfrastructureTable">
+                  <thead>
+                    <tr>
+                      <th>Preschool</th>
+                      <th>Outside Branches</th>
+                      <th>Group Count</th>
+                      <th>Land Area Built</th>
+                      <th>External Sweeping Area</th>
+                      <th>Internal Cleaning Area</th>
+                      <th>Garden Area</th>
+                      <th>Leased Garden Area</th>
+                      <th>Vacant Land Area</th>
+                      <th>Educational Building Count</th>
+                      <th>Floor Count</th>
+                      <th>Wall Material</th>
+                      <th>Wall Condition</th>
+                      <th>Roof Material</th>
+                      <th>Roof Condition</th>
+                      <th>Window Condition</th>
+                      <th>Floor Condition</th>
+                      <th>Door Condition</th>
+                      <th>Assembly Hall Condition</th>
+                      <th>Repaired/Reconstructed</th>
+                      <th>Earthquake Safety</th>
+                      <th>Modern Infrastructure</th>
+                      <th>Satisfied with Condition</th>
+                      <th>Age Score</th>
+                      <th>Infrastructure Score</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Resources Table (Full width) -->
+          <div class="tables-row">
+            <div class="table-box full-width">
+              <h2>Resource Availability Metrics</h2>
+              <div class="table-container">
+                <table id="preschoolResourcesTable">
+                  <thead>
+                    <tr>
+                      <th>Preschool</th>
+                      <th>Sports Equipment</th>
+                      <th>Kitchen Condition</th>
+                      <th>Kitchen Water Supply</th>
+                      <th>Electricity Condition</th>
+                      <th>Generator</th>
+                      <th>Solar Panels</th>
+                      <th>Internal Electrical Condition</th>
+                      <th>Lighting Condition</th>
+                      <th>Heating Source</th>
+                      <th>Heating Fuel Source</th>
+                      <th>Boiler Room Condition</th>
+                      <th>Internal Heating Condition</th>
+                      <th>Water Availability</th>
+                      <th>Drinking Water Source</th>
+                      <th>Fence</th>
+                      <th>Internet Type</th>
+                      <th>Internet Usage</th>
+                      <th>Fire Safety</th>
+                      <th>CCTV</th>
+                      <th>Public Transport Nearby</th>
+                      <th>Accessible for Disabled</th>
+                      <th>Restroom Location</th>
+                      <th>Restroom Water Condition</th>
+                      <th>Restroom Sewage Connection</th>
+                      <th>Restroom Doors/Partitions</th>
+                      <th>Restroom Handwash/Soap</th>
+                      <th>Restroom Sewage Issues</th>
+                      <th>Restroom Water Issues</th>
+                      <th>Restroom Lighting Safe</th>
+                      <th>Classrooms Warm in Winter</th>
+                      <th>Indoor Pipeline Installed</th>
+                      <th>Children Walk >3km</th>
+                      <th>Satisfied with Condition</th>
+                      <th>Resources Score</th>
+                    </tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
             </div>
           </div>
         </div>

@@ -42,6 +42,7 @@ def school_data():
     df = load_data("school")
     if df is None:
         return jsonify({"error": "School data not found"}), 404
+    df = df.fillna(0)
     return jsonify(df.to_dict(orient="records"))
 
 @app.route("/api/preschool-data")

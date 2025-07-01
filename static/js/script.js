@@ -62,14 +62,38 @@ function showSection(sectionId) {
         if (resourcesDonutChart) resourcesDonutChart.update();
       }, 300);
     }
+    else if (sectionId === "school-dashboard") {
+      setTimeout(() => {
+        if (!window.schoolMapInstance) {
+          initSchoolMap();
+        } else {
+          schoolMapInstance.invalidateSize();
+        }
+
+        // Update school charts
+        if (schoolInfraDonutChart) schoolInfraDonutChart.update();
+        if (schoolPopulationDonutChart) schoolPopulationDonutChart.update();
+        if (schoolResourcesDonutChart) schoolResourcesDonutChart.update();
+      }, 300);
+    }
+    else if (sectionId === "preschool-dashboard") {
+      setTimeout(() => {
+        if (!window.preSchoolMapInstance) {
+          initPreSchoolMap();
+        } else {
+          preSchoolMapInstance.invalidateSize();
+        }
+
+        if (preSchoolInfraDonutChart) preSchoolInfraDonutChart.update();
+        if (preSchoolPopulationDonutChart) preSchoolPopulationDonutChart.update();
+        if (preSchoolResourcesDonutChart) preSchoolResourcesDonutChart.update();
+      }, 300);
+    }
   }
 }
 
 document.addEventListener("DOMContentLoaded", () => {
   loadHospitalData();
-  // These would be defined in other files
-  // loadPreschoolData();
-  // loadSchoolData();
   initHospitalMap();
 });
 
