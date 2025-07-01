@@ -642,11 +642,14 @@ function updatePopulationTable(filteredData) {
   filteredData.forEach(hospital => {
     const row = document.createElement('tr');
 
+    // Format numbers to 2 decimal places if they are floats
+    const formatNum = v => (typeof v === 'number' ? v.toFixed(2) : v);
+
     row.innerHTML = `
       <td>${hospital.hospital_name}</td>
-      <td>${hospital.medical_staff}</td>
-      <td>${hospital.bed_capacity}</td>
-      <td>${hospital.total_staff}</td>
+      <td>${formatNum(hospital.medical_staff)}</td>
+      <td>${formatNum(hospital.bed_capacity)}</td>
+      <td>${formatNum(hospital.total_staff)}</td>
       <td class="score-cell ${getScoreClass(hospital.population_score)}">
         ${formatScore(hospital.population_score)}
       </td>
