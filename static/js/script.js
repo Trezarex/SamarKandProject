@@ -109,6 +109,8 @@ async function loadHospitalData() {
       resources_score: h.resources_score
     }));
     populateHospitalFilters();
+    // summary cards for full dataset by default
+    updateHospitalSummaryCards(hospitalData);
 
   } catch (error) {
     console.error("❌ Fetch failed:", error);
@@ -177,6 +179,7 @@ function applyHospitalFilters() {
     const hospitalMatch = selectedHospitals.length === 0 || selectedHospitals.includes(h.hospital_name);
     return districtMatch && hospitalMatch;
   });
+  updateHospitalSummaryCards(filteredHospitalData);
 
   console.log("🔍 Filtered hospital data:", filteredHospitalData);
 
@@ -207,3 +210,32 @@ document.addEventListener('mousemove', (e) => {
     sidebarVisible = false;
   }
 });
+
+function updateHospitalSummaryCards(data) {
+  // Handle no data case
+  if (!data || data.length === 0) {
+    document.getElementById("hospitalTotalCount").textContent = "0";
+    document.getElementById("hospitalAvgSatisfaction").textContent = "-";
+    document.getElementById("hospitalInfraScore").textContent = "-";
+    document.getElementById("hospitalResourcesScore").textContent = "-";
+    return;
+  }
+
+  const total = data.length;
+
+  const avgSatisfaction = average(data.map(d => d.population_score));
+  const avgInfra = average(data.map(d => d.infrastructure_score));
+  const avgResources = average(data.map(d => d.resources_score));
+
+  document.getElementById("hospitalTotalCount").textContent = total;
+  document.getElementById("hospitalAvgSatisfaction").textContent = avgSatisfaction.toFixed(2);
+  document.getElementById("hospitalInfraScore").textContent = avgInfra.toFixed(2);
+  document.getElementById("hospitalResourcesScore").textContent = avgResources.toFixed(2);
+}
+
+// Utility function
+function average(arr) {
+  const valid = arr.filter(v => typeof v === 'number' && !isNaN(v));
+  if (valid.length === 0) return 0;
+  return valid.reduce((sum, val) => sum + val, 0) / valid.length;
+}
