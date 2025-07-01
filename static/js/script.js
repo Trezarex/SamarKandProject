@@ -39,12 +39,17 @@ function showSection(sectionId) {
   }
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  loadHospitalData();
-  loadPreschoolData();
+document.addEventListener("DOMContentLoaded", async () => {
+  await loadHospitalData(); // 🟢 Wait for hospital data to load before drawing charts
+  updateInfraDonutChart(hospitalData);
+  updatePopulationDonutChart(hospitalData);
+  updateResourcesDonutChart(hospitalData);
+
+  loadPreschoolData();      // These can run independently
   loadSchoolData();
-  initHospitalMap();
+  initHospitalMap();        // Initialize map after data is ready
 });
+
 
 // Global variable to hold hospital data
 let hospitalData = [];
@@ -53,6 +58,10 @@ let populationData = [];
 let resourcesData = [];
 let districtChoices;
 let hospitalChoices;
+let infraDonutChart = null;
+let populationDonutChart = null;
+let resourcesDonutChart = null;
+
 
 
 // Main function to load hospital data from backend
@@ -187,6 +196,96 @@ function populateHospitalFilters() {
   });
 }
 
+function updateInfraDonutChart(data) {
+  updateDonutChart(data, 'infraDonutChart', 'infrastructure_score');
+}
+
+function updatePopulationDonutChart(data) {
+  updateDonutChart(data, 'populationDonutChart', 'population_score');
+}
+
+function updateResourcesDonutChart(data) {
+  updateDonutChart(data, 'resourcesDonutChart', 'resources_score');
+}
+
+function updateDonutChart(data, canvasId, scoreKey) {
+  const ctx = document.getElementById(canvasId)?.getContext('2d');
+  if (!ctx) return;
+
+  const categories = {
+    'Excellent (0.8-1.0)': 0,
+    'Good (0.6-0.79)': 0,
+    'Average (0.4-0.59)': 0,
+    'Poor (0.2-0.39)': 0,
+    'Critical (0-0.19)': 0
+  };
+
+  data.forEach(hospital => {
+    const score = parseFloat(hospital[scoreKey]) || 0;
+    if (score >= 0.8) categories['Excellent (0.8-1.0)']++;
+    else if (score >= 0.6) categories['Good (0.6-0.79)']++;
+    else if (score >= 0.4) categories['Average (0.4-0.59)']++;
+    else if (score >= 0.2) categories['Poor (0.2-0.39)']++;
+    else categories['Critical (0-0.19)']++;
+  });
+
+  const labels = Object.keys(categories);
+  const values = Object.values(categories);
+  const total = values.reduce((a, b) => a + b, 0);
+
+  const backgroundColors = [
+    'rgba(40, 167, 69, 0.7)',
+    'rgba(0, 123, 255, 0.7)',
+    'rgba(255, 193, 7, 0.7)',
+    'rgba(255, 152, 0, 0.7)',
+    'rgba(220, 53, 69, 0.7)'
+  ];
+
+  const chartMap = {
+    'infraDonutChart': infraDonutChart,
+    'populationDonutChart': populationDonutChart,
+    'resourcesDonutChart': resourcesDonutChart
+  };
+
+  // Destroy if exists
+  if (chartMap[canvasId]) chartMap[canvasId].destroy();
+
+  const chart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels,
+      datasets: [{
+        data: values,
+        backgroundColor: backgroundColors,
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '65%',
+      plugins: {
+        legend: { position: 'right' },
+        tooltip: {
+          callbacks: {
+            label: context => {
+              const label = context.label || '';
+              const value = context.raw || 0;
+              const percentage = Math.round((value / total) * 100);
+              return `${label}: ${value} (${percentage}%)`;
+            }
+          }
+        }
+      }
+    }
+  });
+
+  if (canvasId === 'infraDonutChart') infraDonutChart = chart;
+  if (canvasId === 'populationDonutChart') populationDonutChart = chart;
+  if (canvasId === 'resourcesDonutChart') resourcesDonutChart = chart;
+}
+
+
 let filteredHospitalData = [];
 
 function applyHospitalFilters() {
@@ -201,6 +300,9 @@ function applyHospitalFilters() {
   });
   updateHospitalSummaryCards(filteredHospitalData);
   updateHospitalMap(filteredHospitalData);
+  updateInfraDonutChart(filteredHospitalData);
+  updatePopulationDonutChart(filteredHospitalData);
+  updateResourcesDonutChart(filteredHospitalData);
 }
 
 
@@ -324,3 +426,5 @@ function updateHospitalMap(data) {
     hospitalMapInstance.setView([39.8, 66.9], 9);
   }
 }
+
+
