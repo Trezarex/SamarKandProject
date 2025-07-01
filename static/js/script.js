@@ -1,28 +1,49 @@
+// Function to auto-hide/show sidebar based on mouse position
+let sidebarVisible = true;
+const sidebar = document.querySelector('.nav-sidebar');
 
-// Unified navigation function for showing/hiding sections and dashboards
+document.addEventListener('mousemove', (e) => {
+  const x = e.clientX;
+
+  // Show sidebar if mouse is near the left edge
+  if (x < 30 && !sidebarVisible) {
+    sidebar.classList.remove('hidden');
+    sidebarVisible = true;
+  }
+
+  // Hide sidebar if mouse moves far right
+  if (x > 300 && sidebarVisible) {
+    sidebar.classList.add('hidden');
+    sidebarVisible = false;
+  }
+});
+
 function showSection(sectionId) {
-  // Hide all content sections
   const sections = document.querySelectorAll('.content-section');
-  sections.forEach(section => {
-    section.classList.remove('active');
-  });
-  // Show the selected section
+  sections.forEach(section => section.classList.remove('active'));
+
   const activeSection = document.getElementById(sectionId);
   if (activeSection) {
     activeSection.classList.add('active');
 
-    // ✅ Fix Leaflet map not rendering immediately
-    if (sectionId === "hospital-dashboard" && window.hospitalMapInstance) {
+    if (sectionId === "hospital-dashboard") {
+      // ⏳ Wait until section is visible, then init and resize map
       setTimeout(() => {
-        window.hospitalMapInstance.invalidateSize();
+        if (!window.hospitalMapInstance) {
+          initHospitalMap(); // Only initialize once
+        } else {
+          hospitalMapInstance.invalidateSize();
+        }
       }, 300);
     }
   }
 }
+
 document.addEventListener("DOMContentLoaded", () => {
   loadHospitalData();
   loadPreschoolData();
   loadSchoolData();
+  initHospitalMap();
 });
 
 // Global variable to hold hospital data
@@ -32,8 +53,6 @@ let populationData = [];
 let resourcesData = [];
 let districtChoices;
 let hospitalChoices;
-
-
 
 
 // Main function to load hospital data from backend
@@ -111,6 +130,7 @@ async function loadHospitalData() {
     populateHospitalFilters();
     // summary cards for full dataset by default
     updateHospitalSummaryCards(hospitalData);
+    applyHospitalFilters();
 
   } catch (error) {
     console.error("❌ Fetch failed:", error);
@@ -180,36 +200,9 @@ function applyHospitalFilters() {
     return districtMatch && hospitalMatch;
   });
   updateHospitalSummaryCards(filteredHospitalData);
-
-  console.log("🔍 Filtered hospital data:", filteredHospitalData);
-
-  // TODO: Use `filteredHospitalData` to update:
-  // updateHospitalSummaryCards(filteredHospitalData);
-  // updateHospitalCharts(filteredHospitalData);
-  // updateHospitalMap(filteredHospitalData);
-  // updateHospitalTables(filteredHospitalData);
+  updateHospitalMap(filteredHospitalData);
 }
 
-
-// Function to auto-hide/show sidebar based on mouse position
-let sidebarVisible = true;
-const sidebar = document.querySelector('.nav-sidebar');
-
-document.addEventListener('mousemove', (e) => {
-  const x = e.clientX;
-
-  // Show sidebar if mouse is near the left edge
-  if (x < 30 && !sidebarVisible) {
-    sidebar.classList.remove('hidden');
-    sidebarVisible = true;
-  }
-
-  // Hide sidebar if mouse moves far right
-  if (x > 300 && sidebarVisible) {
-    sidebar.classList.add('hidden');
-    sidebarVisible = false;
-  }
-});
 
 function updateHospitalSummaryCards(data) {
   // Handle no data case
@@ -223,14 +216,14 @@ function updateHospitalSummaryCards(data) {
 
   const total = data.length;
 
-  const avgSatisfaction = average(data.map(d => d.population_score));
+  const avgPopulationScore = average(data.map(d => d.population_score));
   const avgInfra = average(data.map(d => d.infrastructure_score));
   const avgResources = average(data.map(d => d.resources_score));
 
   document.getElementById("hospitalTotalCount").textContent = total;
-  document.getElementById("hospitalAvgSatisfaction").textContent = avgSatisfaction.toFixed(2);
-  document.getElementById("hospitalInfraScore").textContent = avgInfra.toFixed(2);
-  document.getElementById("hospitalResourcesScore").textContent = avgResources.toFixed(2);
+  document.getElementById("hospitalAvgSatisfaction").textContent = Math.round(avgPopulationScore * 100) + "%";
+  document.getElementById("hospitalInfraScore").textContent = Math.round(avgInfra * 100) + "%";
+  document.getElementById("hospitalResourcesScore").textContent = Math.round(avgResources * 100) + "%";
 }
 
 // Utility function
@@ -238,4 +231,96 @@ function average(arr) {
   const valid = arr.filter(v => typeof v === 'number' && !isNaN(v));
   if (valid.length === 0) return 0;
   return valid.reduce((sum, val) => sum + val, 0) / valid.length;
+}
+
+
+let hospitalMapInstance;
+
+function initHospitalMap() {
+  const mapDiv = document.getElementById('hospitalMap');
+  if (!mapDiv) {
+    console.warn("🚫 #hospitalMap not found in DOM.");
+    return;
+  }
+
+  if (!hospitalMapInstance) {
+    hospitalMapInstance = L.map('hospitalMap').setView([39.8, 66.9], 9);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(hospitalMapInstance);
+  }
+
+  // ✅ Force Leaflet to calculate layout after brief delay
+  setTimeout(() => {
+    hospitalMapInstance.invalidateSize();
+  }, 200);
+}
+
+let mapMarkers = [];
+
+function updateHospitalMap(data) {
+  if (!hospitalMapInstance) return;
+
+  // Remove previous markers
+  mapMarkers.forEach(marker => marker.remove());
+  mapMarkers = [];
+
+  data.forEach(hospital => {
+    if (!hospital.latitude || !hospital.longitude) return;
+
+    const color = hospital.need_category === "RED"
+      ? "red"
+      : hospital.need_category === "YELLOW"
+        ? "orange"
+        : "green";
+
+    // 🔵 Transparent circle halo (outer layer)
+    const halo = L.circle([hospital.latitude, hospital.longitude], {
+      radius: 300, // in meters
+      color: color,
+      fillColor: color,
+      fillOpacity: 0.1,
+      stroke: false
+    }).addTo(hospitalMapInstance);
+
+    // 🔴 Main marker (inner dot)
+    const marker = L.circleMarker([hospital.latitude, hospital.longitude], {
+      radius: 8,
+      color,
+      fillColor: color,
+      fillOpacity: 0.8
+    }).addTo(hospitalMapInstance);
+
+    marker.bindPopup(`
+      <strong>${hospital.hospital_name}</strong><br>
+      ${hospital.district}<br>
+      Need: ${hospital.need_category}<br>
+      Population Score: ${Math.round(hospital.population_score * 100)}%<br>
+      Infrastructure Score: ${Math.round(hospital.infrastructure_score * 100)}%<br>
+      Resources Score: ${Math.round(hospital.resources_score * 100)}%
+    `);
+
+    mapMarkers.push(marker);
+    mapMarkers.push(halo);
+  });
+
+  // 🧭 Auto-fit the map view to visible markers after slight delay
+  if (data.length > 0) {
+    const latLngs = data
+      .filter(h => h.latitude && h.longitude)
+      .map(h => [h.latitude, h.longitude]);
+
+    // ⏳ Delay ensures markers are fully added before fitting
+    setTimeout(() => {
+      hospitalMapInstance.fitBounds(latLngs, {
+        padding: [50, 50],
+        maxZoom: 10 // prevents zooming in too close
+      });
+      hospitalMapInstance.invalidateSize(); // ensure layout fix
+    }, 200);
+  } else {
+    // fallback view
+    hospitalMapInstance.setView([39.8, 66.9], 9);
+  }
 }
