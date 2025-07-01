@@ -329,7 +329,7 @@ function updateInfraDonutChart(infraData) {
       maintainAspectRatio: false,
       plugins: {
         legend: {
-          position: 'right',
+          position: 'bottom',
           labels: {
             font: {
               size: 11
@@ -416,7 +416,7 @@ function updatePopulationDonutChart(populationData) {
       maintainAspectRatio: false,
       plugins: {
         legend: {
-          position: 'right',
+          position: 'bottom',
           labels: {
             font: {
               size: 11
@@ -503,7 +503,7 @@ function updateResourcesDonutChart(resourcesData) {
       maintainAspectRatio: false,
       plugins: {
         legend: {
-          position: 'right',
+          position: 'bottom',
           labels: {
             font: {
               size: 11
