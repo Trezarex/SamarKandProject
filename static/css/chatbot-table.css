@@ -1,0 +1,52 @@
+.chatbot-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.95em;
+  background: #fff;
+}
+
+.chatbot-table th {
+  background: #f8fafd;
+  font-weight: 600;
+  position: sticky;
+  top: 0;
+}
+
+.chatbot-table th, 
+.chatbot-table td {
+  padding: 10px 14px;
+  border-bottom: 1px solid #eef1f5;
+  text-align: left;
+}
+
+.chatbot-table tr:last-child td {
+  border-bottom: none;
+}
+
+.chatbot-table tr:hover td {
+  background-color: #f9fbfe;
+}
+
+.chatbot-table .numeric {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-family: 'SFMono-Regular', Consolas, monospace;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.loading-dots span {
+  animation: blink 1.4s infinite;
+}
+
+.loading-dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.loading-dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}

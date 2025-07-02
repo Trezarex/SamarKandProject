@@ -119,9 +119,9 @@ async function loadSchoolData() {
     initSchoolPopulationBarChart(schoolData);
     initSchoolResourcesBarChart(schoolData);
 
-    updateSchoolPopulationTable(schoolData);
-    updateSchoolInfrastructureTable(schoolData);
-    updateSchoolResourcesTable(schoolData);
+    updateSchoolPopulationTable(schoolPopulationData);
+    updateSchoolInfrastructureTable(schoolInfrastructureData);
+    updateSchoolResourcesTable(schoolResourcesData);
 
   } catch (error) {
     console.error("❌ School data fetch failed:", error);

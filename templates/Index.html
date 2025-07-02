@@ -7,11 +7,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/chatbot-table.css') }}">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
-  <!-- Choices.js CSS -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
 
-  <!-- Choices.js JS -->
   <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
 
   <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
@@ -115,7 +114,6 @@
       margin-right: 6px;
     }
 
-    /* Remove old dropdown styles */
     .dropdown,
     .dropdown-toggle,
     .dropdown-menu,
@@ -237,7 +235,6 @@
           <div id="hospitalMap" style="height: 500px; width: 100%; border-radius: 12px;"></div>
         </div>
 
-        <!-- Replace the charts-row section with this -->
         <div class="charts-row">
           <div class="chart-box">
             <h2 style="text-align: center; font-weight: bolder;">Infrastructure Score Distribution</h2>
@@ -290,7 +287,6 @@
           <canvas id="resourcesBarChart"></canvas>
         </div>
 
-        <!-- Add after the charts-row section -->
         <div class="tables-container">
           <div class="tables-row">
             <!-- Population Table -->
@@ -332,7 +328,7 @@
             </div>
           </div>
 
-          <!-- Resources Table (Full width) -->
+          <!-- Resources Table -->
           <div class="tables-row">
             <div class="table-box full-width">
               <h2>Resource Availability Metrics</h2>
@@ -364,7 +360,6 @@
       <div class="dashboard-container">
         <div class="dashboard-header">
           <h1 class="dashboard-title">School Dashboard</h1>
-          <!-- Filters (copied and adapted from hospital dashboard) -->
           <div class="filters-container">
             <div class="filter-group">
               <label for="schoolDistrictFilter">District:</label>
@@ -503,7 +498,7 @@
             </div>
           </div>
 
-          <!-- Resources Table (Full width) -->
+          <!-- Resources Table -->
           <div class="tables-row">
             <div class="table-box full-width">
               <h2>Resource Availability Metrics</h2>
@@ -535,7 +530,6 @@
       <div class="dashboard-container">
         <div class="dashboard-header">
           <h1 class="dashboard-title">Preschool Dashboard</h1>
-          <!-- Filters (mirroring school dashboard) -->
           <div class="filters-container">
             <div class="filter-group">
               <label for="preschoolDistrictFilter">District:</label>
@@ -693,7 +687,7 @@
             </div>
           </div>
 
-          <!-- Resources Table (Full width) -->
+          <!-- Resources Table -->
           <div class="tables-row">
             <div class="table-box full-width">
               <h2>Resource Availability Metrics</h2>
@@ -773,60 +767,6 @@
     </div>
 
   </div>
-
-  <script>
-    function toggleDashboardDropdown(e) {
-      e.stopPropagation();
-      const btn = document.getElementById('dashboardDropdownBtn');
-      const caret = document.getElementById('dashboardCaret');
-      const menu = document.getElementById('dashboardDropdown');
-      const isOpen = menu.style.display === 'block';
-      menu.style.display = isOpen ? 'none' : 'block';
-      btn.classList.toggle('open', !isOpen);
-      btn.classList.toggle('active', !isOpen);
-      caret.textContent = !isOpen ? '▲' : '▼';
-      menu.setAttribute('aria-expanded', !isOpen ? 'true' : 'false');
-    }
-
-    // Hide dropdown if clicking outside
-    window.addEventListener('click', function (e) {
-      const menu = document.getElementById('dashboardDropdown');
-      const btn = document.getElementById('dashboardDropdownBtn');
-      if (menu && btn && !btn.contains(e.target) && !menu.contains(e.target)) {
-        menu.style.display = 'none';
-        btn.classList.remove('open', 'active');
-        document.getElementById('dashboardCaret').textContent = '▼';
-        menu.setAttribute('aria-expanded', 'false');
-      }
-    });
-
-    function showDashboard(type) {
-      // Hide all dashboards
-      document.getElementById('hospital-dashboard').classList.remove('active');
-      document.getElementById('school-dashboard').classList.remove('active');
-      document.getElementById('preschool-dashboard').classList.remove('active');
-      // Show the selected one
-      document.getElementById(type + '-dashboard').classList.add('active');
-
-      // Update sidebar dropdown active state
-      const items = document.querySelectorAll('.sidebar-dropdown-item');
-      items.forEach(item => {
-        if (item.textContent.toLowerCase().includes(type)) {
-          item.classList.add('active');
-        } else {
-          item.classList.remove('active');
-        }
-      });
-
-      // Optionally: update dashboard title if needed
-      // ...
-
-      // Load data for the selected dashboard (call dashboard-specific loader if implemented)
-      if (typeof window[`load${type.charAt(0).toUpperCase() + type.slice(1)}DashboardData`] === 'function') {
-        window[`load${type.charAt(0).toUpperCase() + type.slice(1)}DashboardData`]();
-      }
-    }
-  </script>
    
 </body>
 
