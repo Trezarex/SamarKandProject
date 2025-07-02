@@ -1153,6 +1153,13 @@ canvas {
 #preschoolResourcesBarChart {
     height: 550px !important;
 }
+/**
+ * #schoolResourcesBarChart
+ *
+ * Sets the height of the school resources bar chart to 550px. This is an
+ * override of the default height of 300px, which is too small for this
+ * particular chart.
+ */
 #schoolResourcesBarChart {
     height: 550px !important;
 }

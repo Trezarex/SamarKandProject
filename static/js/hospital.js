@@ -791,17 +791,24 @@ function initInfrastructureBarChart(data) {
             display: true,
             text: 'Average Value',
             font: {
-              weight: 'bold'
+              weight: 'bold',
+              color: '#000000'
             }
           },
           grid: {
             display: true,
-            color: 'rgba(0, 0, 0, 0.05)'
+            color: 'rgba(0, 0, 0, 0)'
+          },
+          ticks: {
+            color: '#000000'
           }
         },
         y: {
           grid: {
             display: false
+          },
+          ticks: {
+            color: '#000000'
           }
         }
       },
@@ -935,7 +942,8 @@ function initPopulationBarChart(data) {
             display: true,
             text: 'Total Value',
             font: {
-              weight: 'bold'
+              weight: 'bold',
+              color: '#000000'
             }
           },
           grid: {
@@ -943,6 +951,7 @@ function initPopulationBarChart(data) {
             color: 'rgba(0, 0, 0, 0.05)'
           },
           ticks: {
+            color: '#000000',
             callback: function(value) {
               // Don't show the scaled values for population score
               return value % 1 === 0 ? value : '';
@@ -952,6 +961,9 @@ function initPopulationBarChart(data) {
         y: {
           grid: {
             display: false
+          },
+          ticks: {
+            color: '#000000'
           }
         }
       },
@@ -1106,12 +1118,16 @@ function initResourcesBarChart(data) {
           grid: {
             display: false
           },
+
+          
           ticks: {
             autoSkip: false,
             font: {
-              size: 11
+              size: 11,
+              
             },
-            padding: 5
+            padding: 5,
+            color: '#000000'
           }
         },
         x: {
@@ -1121,16 +1137,18 @@ function initResourcesBarChart(data) {
             display: true,
             text: 'Percentage',
             font: {
-              weight: 'bold'
+              weight: 'bold',
+              color: '#000000'
             }
           },
           ticks: {
             callback: function(value) {
               return value + '%';
-            }
+            },
+            color: '#000000'
           },
           grid: {
-            color: 'rgba(0, 0, 0, 0.05)'
+            color: 'rgba(0, 0, 0, 0)'
           }
         }
       },

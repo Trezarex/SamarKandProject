@@ -839,17 +839,24 @@ function initPreSchoolInfrastructureBarChart(data) {
             display: true,
             text: 'Average Value',
             font: {
-              weight: 'bold'
+              weight: 'bold',
+              color: '#000000'
             }
           },
           grid: {
             display: true,
             color: 'rgba(0, 0, 0, 0.05)'
+          },
+          ticks: {
+            color: '#000000'
           }
         },
         y: {
           grid: {
             display: false
+          },
+          ticks: {
+            color: '#000000'
           }
         }
       },
@@ -1000,12 +1007,16 @@ function initPreSchoolPopulationBarChart(data) {
             callback: function(value) {
               // Don't show the scaled values for population score
               return value % 1 === 0 ? value : '';
-            }
+            },
+            color: '#000000'
           }
         },
         y: {
           grid: {
             display: false
+          },
+          ticks: {
+            color: '#000000'
           }
         }
       },
@@ -1177,7 +1188,8 @@ function initPreSchoolResourcesBarChart(data) {
             font: {
               size: 11
             },
-            padding: 5
+            padding: 5,
+            color: '#000000'
           }
         },
         x: {
@@ -1193,7 +1205,8 @@ function initPreSchoolResourcesBarChart(data) {
           ticks: {
             callback: function(value) {
               return value + '%';
-            }
+            },
+            color: '#000000'
           },
           grid: {
             color: 'rgba(0, 0, 0, 0.05)'
