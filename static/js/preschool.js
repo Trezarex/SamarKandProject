@@ -1004,9 +1004,12 @@ function initPreSchoolPopulationBarChart(data) {
             color: 'rgba(0, 0, 0, 0.05)'
           },
           ticks: {
+            stepSize: 1,
+            min: 0,
+            max: 1,
             callback: function(value) {
-              // Don't show the scaled values for population score
-              return value % 1 === 0 ? value : '';
+              // Show all integer values including 1
+              return Number.isInteger(value) ? value : '';
             },
             color: '#000000'
           }

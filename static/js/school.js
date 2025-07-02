@@ -938,6 +938,9 @@ function initSchoolPopulationBarChart(data) {
             color: 'rgba(0, 0, 0, 0)'
           },
           ticks: {
+            stepSize: 1,
+            min: 0,
+            max: 1,
             callback: function(value) {
               // Don't show the scaled values for population score
               return value % 1 === 0 ? value : '';
