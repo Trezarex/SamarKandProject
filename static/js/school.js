@@ -1066,12 +1066,12 @@ function initSchoolResourcesBarChart(data) {
   gradient.addColorStop(1, 'rgba(16, 0, 105, 0.2)');
 
   // Destroy existing chart if it exists
-  if (resourcesBarChart) {
-    resourcesBarChart.destroy();
+  if (schoolResourcesBarChart) {
+    schoolResourcesBarChart.destroy();
   }
 
   // Create new chart
-  resourcesBarChart = new Chart(ctx, {
+  schoolResourcesBarChart = new Chart(ctx, {
     type: 'bar',
     data: {
       labels: metricLabels,
