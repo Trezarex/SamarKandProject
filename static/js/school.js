@@ -662,7 +662,7 @@ function initSchoolInfrastructureBarChart(data) {
   // Define the metrics we want to include in the chart
   const metrics = [
    
-      'school_name',
+      
       'district',
       'wall_material',
       'wall_condition',
@@ -820,8 +820,8 @@ function initSchoolPopulationBarChart(data) {
 
   // Define the metrics we want to include in the chart
   const schoolMetrics = [
-    'school_name',
-    'district',
+    
+   
     'usage_percent',
     
   ];
@@ -840,8 +840,7 @@ function initSchoolPopulationBarChart(data) {
 
   // Format labels for display
   const schoolDisplayLabels = [
-    'School Name',
-    'District',
+    
     'Usage Percent',
     
   ];
@@ -870,16 +869,12 @@ function initSchoolPopulationBarChart(data) {
         label: 'Total Value',
         data: schoolMetricValues,
         backgroundColor: [
-          'rgba(75, 192, 192, 0.6)',  // Teal for school name
-          'rgba(153, 102, 255, 0.6)', // Purple for district
-          'rgba(255, 159, 64, 0.6)',  // Orange for usage percent
-          'rgba(255, 99, 132, 0.6)'   // Pink for population score
+          'rgba(75, 192, 192, 0.6)',  // Teal for usage percent
+          
         ],
         borderColor: [
           'rgba(75, 192, 192, 1)',
-          'rgba(153, 102, 255, 1)',
-          'rgba(255, 159, 64, 1)',
-          'rgba(255, 99, 132, 1)'
+          
         ],
         borderWidth: 1,
         borderRadius: 4
@@ -970,8 +965,7 @@ function initSchoolResourcesBarChart(data) {
 
   // Define the metrics we want to include in the chart
   const metrics = [
-    'school_name',
-    'district',
+    
     'sports_equipment',
     'drinking_water',
     'generator',
@@ -993,7 +987,7 @@ function initSchoolResourcesBarChart(data) {
     'restroom_connection',
     'classrooms_warm',
     'water_pipeline',
-    'resources_score',
+    
     'electrical_system',
     'lighting_system',
     'boiler_condition',
@@ -1009,8 +1003,7 @@ function initSchoolResourcesBarChart(data) {
 
   // Define friendly names for the metrics
   const metricLabels = [
-    'School Name',
-    'District',
+    
     'Sports Equipment',
     'Drinking Water',
     'Generator',
@@ -1032,7 +1025,7 @@ function initSchoolResourcesBarChart(data) {
     'Restroom Connection',
     'Classrooms Warm',
     'Water Pipeline',
-    'Resources Score',
+    
     'Electrical System',
     'Lighting System',
     'Boiler Condition',

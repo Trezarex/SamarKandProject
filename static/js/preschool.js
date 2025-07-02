@@ -875,16 +875,12 @@ function initPreSchoolPopulationBarChart(data) {
 
   // Define the metrics we want to include in the chart
   const metrics = [
-    'kindergarten_name',
-    'district',
+    
     'design_capacity',
     'total_students',
-    'boys',
-    'girls',
     'staff_total',
-    'staff_men',
-    'staff_women',
-    'population_score' 
+    
+    
     
   ];
 
@@ -902,16 +898,13 @@ function initPreSchoolPopulationBarChart(data) {
 
   // Format labels for display
   const displayLabels = [
-    'Kindergarten Name',
-    'District',
+    
     'Design Capacity',
     'Total Students',
-    'Boys',
-    'Girls',
+   
     'Staff Total',
-    'Staff Men',
-    'Staff Women',
-    'Population Score',
+    
+    
     
   ];
 
@@ -1038,8 +1031,7 @@ function initPreSchoolResourcesBarChart(data) {
 
   // Define the metrics we want to include in the chart
   const metrics = [
-    'kindergarten_name',
-    'district',
+    
     'sports_equipment_available',
     'kitchen_condition',
     'kitchen_water_supply',
@@ -1073,15 +1065,14 @@ function initPreSchoolResourcesBarChart(data) {
     'indoor_pipeline_installed',
     'children_walk_more_than_3km',
     'satisfied_with_condition',
-    'resources_score'
+    
       
 
   ];
 
   // Define friendly names for the metrics
   const metricLabels = [
-    'Kindergarten Name',
-    'District',
+   
     'Sports Equipment Available',
     'Kitchen Condition',
     'Kitchen Water Supply',
@@ -1115,9 +1106,6 @@ function initPreSchoolResourcesBarChart(data) {
     'Indoor Pipeline Installed',
     'Children Walk More Than 3km',
     'Satisfied With Condition',
-    'Resources Score'
-
-
   ];
 
   // Calculate percentage of 'Yes' for each metric
