@@ -136,14 +136,17 @@ body {
     cursor: pointer;
 }
 
-.nav-item:hover,
-.nav-item.active {
+.nav-item:hover
+ {
     background: rgba(255, 255, 255, 0.1);
     color: white;
     transform: translateX(5px);
 }
 
-.nav-item.active {
+.nav-item.active,
+.nav-item:focus,
+#homepage.active ~ .nav-sidebar .nav-item[onclick= "homepage"],
+#chat-bot.active ~ .nav-sidebar .nav-item[onclick= "chat-bot"] {
     background: linear-gradient(90deg, rgba(67, 97, 238, 0.2) 0%, transparent 100%);
     color: white;
     font-weight: 600;
