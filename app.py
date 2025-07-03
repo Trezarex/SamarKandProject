@@ -60,78 +60,7 @@ DATASET_CONTEXT_CACHE = None
 CONTEXT_CACHE_TIMESTAMP = 0
 CACHE_DURATION = 600  # 10 minutes
 
-def get_dataset_context():
-    global DATASET_CONTEXT_CACHE, CONTEXT_CACHE_TIMESTAMP
-    
-    # Return cached context if valid
-    if (DATASET_CONTEXT_CACHE and 
-        time.time() - CONTEXT_CACHE_TIMESTAMP < CACHE_DURATION):
-        return DATASET_CONTEXT_CACHE
-    
-    # Load datasets
-    hospital_df = load_data("hospital")
-    school_df = load_data("school")
-    preschool_df = load_data("preschool")
-    
-    if hospital_df is None or school_df is None or preschool_df is None:
-        return None
-    
-    # Prepare context
-    context = "\n".join([
-        "=== Hospital Data ===",
-        prepare_data_context(hospital_df),
-        "=== School Data ===",
-        prepare_data_context(school_df),
-        "=== Preschool Data ===",
-        prepare_data_context(preschool_df)
-    ])
-    
-    # Update cache
-    DATASET_CONTEXT_CACHE = context
-    CONTEXT_CACHE_TIMESTAMP = time.time()
-    
-    return context
 
-@app.route("/deepseek_chat_bot", methods=["POST"])
-def deepseek_chat_bot():
-    try:
-        data = request.get_json()
-        user_message = data.get('message', '').strip()
-        
-        if not user_message:
-            return jsonify({'response': 'Please provide a valid message.'}), 400
-        
-        logger.info(f"Chat request: {user_message}")
-        
-        # Get cached context
-        context = get_dataset_context()
-        if not context:
-            return jsonify({'response': 'Data unavailable. Please try again later.'}), 500
-        
-        # Get AI response
-        ai_response = get_ai_response(user_message, context)
-        
-        # Format tables
-        if "|" in ai_response and "\n" in ai_response:
-            ai_response = format_table_response(ai_response)
-            
-        logger.info("Chat response generated")
-        return jsonify({'response': ai_response})
-
-    except Exception as e:
-        logger.error(f"Chat error: {str(e)}")
-        return jsonify({'response': 'Error processing your request'}), 500
-
-def format_table_response(text):
-    lines = text.split('\n')
-    
-    filtered = [line for line in lines if line.strip() and not line.startswith('|-')]
-    
-    return '\n'.join(
-        f"| {line.strip().replace('|', ' | ')} |" 
-        if '|' in line else line
-        for line in filtered
-    )
 def prepare_data_context(df):
     try:
         if df is None or df.empty:
@@ -173,6 +102,50 @@ def prepare_data_context(df):
     except Exception as e:
         logger.error(f"Error preparing context: {str(e)}")
         return "Data context unavailable."
+
+def get_dataset_context():
+    global DATASET_CONTEXT_CACHE, CONTEXT_CACHE_TIMESTAMP
+    
+    # Return cached context if valid
+    if (DATASET_CONTEXT_CACHE and 
+        time.time() - CONTEXT_CACHE_TIMESTAMP < CACHE_DURATION):
+        return DATASET_CONTEXT_CACHE
+    
+    # Load datasets
+    hospital_df = load_data("hospital")
+    school_df = load_data("school")
+    preschool_df = load_data("preschool")
+    
+    if hospital_df is None or school_df is None or preschool_df is None:
+        return None
+    
+    # Prepare context
+    context = "\n".join([
+        "=== Hospital Data ===",
+        prepare_data_context(hospital_df),
+        "=== School Data ===",
+        prepare_data_context(school_df),
+        "=== Preschool Data ===",
+        prepare_data_context(preschool_df)
+    ])
+    
+    # Update cache
+    DATASET_CONTEXT_CACHE = context
+    CONTEXT_CACHE_TIMESTAMP = time.time()
+    
+    return context
+
+def format_table_response(text):
+    lines = text.split('\n')
+    
+    filtered = [line for line in lines if line.strip() and not line.startswith('|-')]
+    
+    return '\n'.join(
+        f"| {line.strip().replace('|', ' | ')} |" 
+        if '|' in line else line
+        for line in filtered
+    )
+
 
 def get_ai_response(user_message, context):
     try:
@@ -232,6 +205,38 @@ def generate_fallback_response(user_message, context):
     
     else:
         return "I can help you analyze the Samarkand hospital data. Try asking about satisfaction scores, regional comparisons, infrastructure quality, or resource availability."
+
+
+@app.route("/deepseek_chat_bot", methods=["POST"])
+def deepseek_chat_bot():
+    try:
+        data = request.get_json()
+        user_message = data.get('message', '').strip()
+        
+        if not user_message:
+            return jsonify({'response': 'Please provide a valid message.'}), 400
+        
+        logger.info(f"Chat request: {user_message}")
+        
+        # Get cached context
+        context = get_dataset_context()
+        if not context:
+            return jsonify({'response': 'Data unavailable. Please try again later.'}), 500
+        
+        # Get AI response
+        ai_response = get_ai_response(user_message, context)
+        
+        # Format tables
+        if "|" in ai_response and "\n" in ai_response:
+            ai_response = format_table_response(ai_response)
+            
+        logger.info("Chat response generated")
+        return jsonify({'response': ai_response})
+
+    except Exception as e:
+        logger.error(f"Chat error: {str(e)}")
+        return jsonify({'response': 'Error processing your request'}), 500
+
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=8000, debug=True)
