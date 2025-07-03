@@ -1,3 +1,43 @@
+(function () {
+  const tableIds = [
+    'populationTable',
+    'infrastructureTable',
+    'resourcesTable',
+    'schoolPopulationTable',
+    'schoolInfrastructureTable',
+    'schoolResourcesTable',
+    'preschoolPopulationTable',
+    'preschoolInfrastructureTable',
+    'preschoolResourcesTable'
+  ];
+  const sortStates = {};
+  tableIds.forEach(id => {
+    const table = document.getElementById(id);
+    if (table) {
+      const ths = table.querySelectorAll('th');
+      if (ths.length === 0) return;
+      const lastTh = ths[ths.length - 1];
+      lastTh.style.cursor = 'pointer';
+      lastTh.title = 'Sort by ' + lastTh.textContent;
+      sortStates[id] = true;
+      lastTh.addEventListener('click', function () {
+        const tbody = table.querySelector('tbody');
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+        const colIdx = ths.length - 1;
+        rows.sort((a, b) => {
+          const aVal = parseFloat(a.children[colIdx].textContent) || 0;
+          const bVal = parseFloat(b.children[colIdx].textContent) || 0;
+          return sortStates[id] ? bVal - aVal : aVal - bVal;
+        });
+        rows.forEach(row => tbody.appendChild(row));
+        sortStates[id] = !sortStates[id];
+        lastTh.innerHTML = lastTh.textContent.replace(/[▲▼]/g, '').trim() + ' ' + (sortStates[id] ? '▼' : '▲');
+      });
+    }
+  });
+})();
+
+
 // handling section visibility
 function showSection(sectionId) {
   const sections = document.querySelectorAll('.content-section');
