@@ -155,7 +155,7 @@ def get_ai_response(user_message, context):
     try:
         from openai import OpenAI
 
-        api_key = 'sk-a2d45016d49e4cb48b204d19ddcbb6e4' or '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'
+        api_key = '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'
         if not api_key:
             logger.warning("No OpenRouter API key found")
             return generate_fallback_response(user_message, context)
