@@ -5,9 +5,6 @@ from dotenv import load_dotenv
 import logging
 import time
 
-# Load environment variables
-load_dotenv()
-
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
