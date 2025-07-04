@@ -1,7 +1,6 @@
 from flask import Flask, render_template, request, jsonify
 import pandas as pd
 import os
-from dotenv import load_dotenv
 import logging
 import time
 
