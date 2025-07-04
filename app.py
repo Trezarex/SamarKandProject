@@ -70,13 +70,13 @@ def prepare_data_context(df):
         total_records = len(df)
         columns = list(df.columns)
         total_districts_list = list(df['district'])
+        infrastructure_score = dict(zip(df['district'], df['infrastructure_score']))
+        resources_score = dict(zip(df['district'], df['resources_score']))
+        population_score = dict(zip(df['district'], df['population_score']))
         
         # Get sample data
         sample_data = df.head(3).to_string(index=False)
-        full_dataset = df
 
-        # Create a dictionary mapping each district to its need_category
-        need_category = dict(zip(df['district'], df['need_category']))
         
         # Calculate some basic stats
         numeric_columns = df.select_dtypes(include=['number']).columns
@@ -94,13 +94,9 @@ def prepare_data_context(df):
             - Total records: {total_records}
             - Columns: {', '.join(columns)}
             - Districts: {", ".join(total_districts_list)}
-
-            Sample Data:
-            {sample_data}
-
-            Dataset: {full_dataset.to_string(index=False)}
-
-            District Wise Need Category: {need_category}
+            - Infrastructure Score: {infrastructure_score}
+            - Resources Score: {resources_score}
+            - Population Score: {population_score}
 
 
             Key Statistics:
