@@ -9,6 +9,9 @@ env/
 ENV/
 .venv/
 
+# Environment variables
+.env
+.env.*
 
 # Flask session files (if any)
 instance/

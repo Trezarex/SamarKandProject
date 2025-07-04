@@ -3,6 +3,9 @@ import pandas as pd
 import os
 import logging
 import time
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -155,7 +158,7 @@ def get_ai_response(user_message, context):
     try:
         from openai import OpenAI
 
-        api_key = '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'
+        api_key = os.getenv('OPENROUTER_API_KEY') or os.getenv('open_router_key') 
         if not api_key:
             logger.warning("No OpenRouter API key found")
             return generate_fallback_response(user_message, context)
